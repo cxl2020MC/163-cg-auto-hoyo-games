@@ -5,6 +5,7 @@ import asyncio
 from dataclasses import dataclass
 
 from . import utils, types, config
+from .log import logger as log
 
 
 engine = RapidOCR()
@@ -27,10 +28,13 @@ async def ocr_image(image_path: str = str(_image_path)) -> types.OCR_Results | N
     await asyncio.to_thread(result.vis, str(utils.get_img_file_path("vis_det_rec.jpg")))
     if isinstance(result, RapidOCROutput):
         result = to_ocr_result(result)
+        if not result: 
+            return None
+        log.debug(result)
         return result
 
 
 def to_ocr_result(result: RapidOCROutput) -> types.OCR_Results | None:
     if not result.txts or result.boxes is None or not result.scores:
         return None
-    return map(lambda x: types.OCR_Result(*x), zip(result.txts, result.boxes, result.scores))
+    return list(map(lambda x: types.OCR_Result(*x), zip(result.txts, result.boxes, result.scores)))

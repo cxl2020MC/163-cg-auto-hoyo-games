@@ -19,8 +19,6 @@ with open("./data/config.json", 'r', encoding='utf-8') as f:
     log.debug(config)
 
 
-CHANGE_IMG_DIR = config.image_change_dir
+CHANGE_IMG_DIR = Path(config.image_change_dir)
 
-img_file_path = Path(CHANGE_IMG_DIR)
-
-SCREENSHOT_PATH = img_file_path / "screenshot.png"
+SCREENSHOT_PATH = CHANGE_IMG_DIR / "screenshot.png"

@@ -4,11 +4,11 @@ from dataclasses import dataclass
 @dataclass
 class OCR_Result:
     txt: str
-    box: list[float]
+    box: list[list[float]]
     scores: float
 
 
-type OCR_Results = map[OCR_Result]
+type OCR_Results = list[OCR_Result]
 
 
 @dataclass

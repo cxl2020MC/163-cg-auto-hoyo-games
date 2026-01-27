@@ -7,8 +7,11 @@ from ... import config
 from ... import img_cv
 from ...log import logger as log
 
-
 async def main(page: Page):
+    await goto_game_home(page)
+    await open_quick_book(page)
+
+async def goto_game_home(page: Page):
     for _ in range(1000):
         await brswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
@@ -17,6 +20,7 @@ async def main(page: Page):
         await utils.ocr_click_txts(page, ocr_output, ["点击进入", "点击登录", "确定", "今日到账"])
         if await utils.get_ocr_txt_position(ocr_output, "星期"):
             log.info("找到星期")
+            return
 
         cv_result = await img_cv.mach_template(str(config.SCREENSHOT_PATH), "./core/template/tc.png")
         
@@ -27,7 +31,8 @@ async def main(page: Page):
             await brswer.click_video(page, x, y)
 
         await page.wait_for_timeout(1000)
-
+    log.error("没有找到星期")
+    raise Exception("没有找到星期")
 
 async def open_quick_book(page: Page):
     for _ in range(1000):
@@ -37,10 +42,23 @@ async def open_quick_book(page: Page):
             continue
         if await utils.get_ocr_txt_position(ocr_output, "QUICK"):
             log.info("当前正在快捷手册页面")
+            cofee_box = await utils.get_ocr_txt_position(ocr_output, "咖啡")
+            if cofee_box:
+                text, box = cofee_box
+                res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
+                await utils.ocr_click_txts(page, ocr_output, ["前往"])
+                # return
+        elif await utils.get_ocr_txt_position(ocr_output, "传送"):
+            log.info("当前正在选择传送页面")
+            await utils.ocr_click_txts(page, ocr_output, ["确认"])
+
 
         cv_result = await img_cv.mach_template(str(config.SCREENSHOT_PATH), "./core/template/kjsc.png")
         match_res = utils.get_cv_box_center(cv_result)
         if match_res:
-            log.info(f"在 {match_res} 找到返回按钮")
+            log.info(f"在 {match_res} 找到打开快捷手册按钮")
             x, y = match_res
             await brswer.click_video(page, x, y)
+        
+        await page.wait_for_timeout(1000)
+
