@@ -70,6 +70,7 @@ async def quick_book_daly_task_main(page: Page, index: int):
                 ocr_output = await ocr.ocr_image()
                 await utils.ocr_click_txts(page, ocr_output, ["一杯汀曼特调"])
                 await page.wait_for_timeout(3000)
+                await utils.ocr_click_txts(page, res, ["确定"])
 
         case _:
             log.error("无法识别的任务id")
