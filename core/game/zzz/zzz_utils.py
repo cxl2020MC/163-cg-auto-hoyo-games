@@ -15,6 +15,8 @@ from enum import Enum
 class Game_Status(Enum):
     Street = "街区"
     Quick_Book = "快捷手册"
+    Loading = "加载中"
+    Unknow = "未知"
 
 # 检测游戏当前状态
 
@@ -28,6 +30,11 @@ async def check_game_status(page: Page, ocr_result: types.OCR_Results):
         elif "QUICK" in ocr_result_item.txt:
             game_status = Game_Status.Quick_Book
             break
+        elif "NOW LOADING" in ocr_result_item.txt:
+            game_status = Game_Status.Loading
+            break
+        else:
+            game_status = Game_Status.Unknow
     log.info(f"当前游戏状态为: {game_status}")
     return game_status
 
@@ -51,12 +58,22 @@ async def agree_teleport(page: Page) -> bool:
     for i in range(5):
         await brswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
-        if ocr_output is None:
-            log.error("OCR 返回结果为空")
-            continue
         if await utils.get_ocr_txt_position(ocr_output, "传送"):
             log.info("当前正在同意传送页面")
             await utils.ocr_click_txts(page, ocr_output, ["确认"])
             return True
         await page.wait_for_timeout(1000)
-    raise Exception("无法进入传送页面")
+    log.warning("没有找到同意传送页面")
+    return False
+
+
+async def wait_for_teleport(page: Page) -> bool:
+    for i in range(60):
+        await brswer.screen_shot(page)
+        ocr_output = await ocr.ocr_image()
+        game_status = await check_game_status(page, ocr_output)
+        if game_status == Game_Status.Street:
+            log.info("已到达目的地")
+            return True
+        await page.wait_for_timeout(1000)
+    return False
