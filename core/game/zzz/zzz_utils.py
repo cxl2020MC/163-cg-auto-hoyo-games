@@ -9,10 +9,10 @@ from ... import img_cv
 
 from ...log import logger as log
 
-from enum import Enum
+from enum import StrEnum
 
 
-class Game_Status(Enum):
+class Game_Status(StrEnum):
     Street = "街区"
     Quick_Book = "快捷手册"
     Loading = "加载中"
