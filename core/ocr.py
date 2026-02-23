@@ -13,7 +13,6 @@ engine = RapidOCR()
 _image_path = config.SCREENSHOT_PATH
 
 
-
 async def ocr_image_old(image_path: str = str(_image_path)) -> RapidOCROutput | None:
     result = await asyncio.to_thread(engine, image_path)
     print(result)
@@ -28,8 +27,6 @@ async def ocr_image(image_path: str = str(_image_path)) -> types.OCR_Results | N
     await asyncio.to_thread(result.vis, str(utils.get_img_file_path("vis_det_rec.jpg")))
     if isinstance(result, RapidOCROutput):
         result = to_ocr_result(result)
-        if not result: 
-            return None
         log.debug(result)
         return result
 

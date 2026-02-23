@@ -1,10 +1,10 @@
 from pathlib import Path
 from playwright.async_api import Page
 
-from .brswer import click_video
+from . import brswer
 
 
-from . import config, types
+from . import config, types, img_cv
 from .log import logger as log
 
 
@@ -24,14 +24,13 @@ async def get_ocr_txt_position(ocr_output: types.OCR_Results, match_txt: str):
     log.debug(f"未匹配到文本 {match_txt}")
 
 
-
 async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, texts: list[str]):
     for txt in texts:
         result = await get_ocr_txt_position(ocr_output, txt)
         if result is not None:
             _, box = result
             x, y = get_box_center(box)
-            await click_video(page, x, y)
+            await brswer.click_video(page, x, y)
     return ocr_output
 
 
@@ -60,3 +59,13 @@ def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, 
             func_result.append(ocr)
     log.debug(f"匹配结果 {func_result}")
     return func_result
+
+
+async def cilck_cv_template(page: Page, template_path: str):
+    cv_result = await img_cv.mach_template(str(config.SCREENSHOT_PATH), template_path)
+    match_res = get_cv_box_center(cv_result)
+    if match_res:
+        log.info(f"在 {match_res} 找到 {template_path}")
+        x, y = match_res
+        await brswer.click_video(page, x, y)
+        return True

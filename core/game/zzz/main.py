@@ -1,15 +1,18 @@
 from playwright.async_api import Page
 
+from . import zzz_utils
+
 from ... import brswer
 from ... import ocr
 from ... import utils
-from ... import config
-from ... import img_cv
+
 from ...log import logger as log
+
 
 async def main(page: Page):
     await goto_game_home(page)
-    await open_quick_book(page)
+    await quick_book_daly_task(page)
+
 
 async def goto_game_home(page: Page):
     for _ in range(1000):
@@ -22,43 +25,52 @@ async def goto_game_home(page: Page):
             log.info("找到星期")
             return
 
-        cv_result = await img_cv.mach_template(str(config.SCREENSHOT_PATH), "./core/template/tc.png")
-        
-        cv_box_center = utils.get_cv_box_center(cv_result)
-        if cv_box_center:
-            log.info(f"在 {cv_box_center} 找到退出按钮")
-            x, y = cv_box_center
-            await brswer.click_video(page, x, y)
+        await zzz_utils.return_to_streets(page, ocr_output)
 
         await page.wait_for_timeout(1000)
     log.error("没有找到星期")
     raise Exception("没有找到星期")
 
+
 async def open_quick_book(page: Page):
-    for _ in range(1000):
+    for _ in range(10):
         await brswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
         if ocr_output is None:
+            log.error("OCR 返回结果为空")
             continue
         if await utils.get_ocr_txt_position(ocr_output, "QUICK"):
             log.info("当前正在快捷手册页面")
+            return True
+        else:
+            log.info("当前不是快捷手册页面")
+            await utils.cilck_cv_template(page, "./core/template/kjsc.png")
+        await page.wait_for_timeout(1000)
+    return False
+
+
+async def quick_book_daly_task(page: Page):
+    for index in range(4):
+        await quick_book_daly_task_main(page, index)
+        # await open_quick_book(page)
+
+
+async def quick_book_daly_task_main(page: Page, index: int):
+    await open_quick_book(page)
+    await brswer.screen_shot(page)
+    ocr_output = await ocr.ocr_image()
+    if ocr_output is None:
+        log.error("OCR 返回结果为空")
+        raise Exception("OCR 返回结果为空")
+    match index:
+        case 0:
             cofee_box = await utils.get_ocr_txt_position(ocr_output, "咖啡")
             if cofee_box:
                 text, box = cofee_box
-                res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
-                await utils.ocr_click_txts(page, ocr_output, ["前往"])
-                # return
-        elif await utils.get_ocr_txt_position(ocr_output, "传送"):
-            log.info("当前正在选择传送页面")
-            await utils.ocr_click_txts(page, ocr_output, ["确认"])
-
-
-        cv_result = await img_cv.mach_template(str(config.SCREENSHOT_PATH), "./core/template/kjsc.png")
-        match_res = utils.get_cv_box_center(cv_result)
-        if match_res:
-            log.info(f"在 {match_res} 找到打开快捷手册按钮")
-            x, y = match_res
-            await brswer.click_video(page, x, y)
-        
-        await page.wait_for_timeout(1000)
-
+                res = utils.get_ocr_box_in_range_x(
+                    ocr_output, (box[0][0], box[1][0]))
+                await utils.ocr_click_txts(page, res, ["前往"])
+                await zzz_utils.agree_teleport(page)
+        case _:
+            log.error("无法识别的任务id")
+            raise Exception("无法识别的任务id")

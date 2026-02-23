@@ -23,7 +23,7 @@ async def mach_template(img_path: str, template_path: str):
     x, y = max_loc
     result = types.CV_Result(x=x, y=y, width=width,
                              height=height, score=max_val)
-    log.debug(f"图片模板匹配结果：{result}")
+    log.debug(f"图片 {template_path} 模板匹配结果：{result}")
     return result
 
 
