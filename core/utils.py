@@ -15,21 +15,28 @@ def get_img_file_path(file_name):
 SCREENSHOT_PATH = get_img_file_path("screenshot.png")
 
 
-async def get_ocr_txt_position(ocr_output: types.OCR_Results, match_txt: str):
+async def match_ocr_txts(ocr_output: types.OCR_Results, match_txt: str):
+    txt_positions: list[types.OCR_Result] = []
     for ocr in ocr_output:
         txt, box = ocr.txt, ocr.box
         if match_txt in txt:
             log.debug(f"匹配到文本 {match_txt} 于 {txt} , 位置范围 {box}")
-            return (txt, box)
-    log.debug(f"未匹配到文本 {match_txt}")
+            txt_positions.append(ocr)
+    log.debug(f"共匹配到文本 {match_txt} {len(txt_positions)} 次")
+    return txt_positions
+
+
+async def match_ocr_txt(ocr_output: types.OCR_Results, match_txt: str) -> types.OCR_Result | None:
+    text_positions = await match_ocr_txts(ocr_output, match_txt)
+    if len(text_positions) > 0:
+        return text_positions[0]
 
 
 async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, texts: list[str]):
     for txt in texts:
-        result = await get_ocr_txt_position(ocr_output, txt)
+        result = await match_ocr_txt(ocr_output, txt)
         if result is not None:
-            _, box = result
-            x, y = get_box_center(box)
+            x, y = get_box_center(result.box)
             await brswer.click_video(page, x, y)
     return ocr_output
 

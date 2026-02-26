@@ -58,7 +58,7 @@ async def agree_teleport(page: Page) -> bool:
     for i in range(5):
         await brswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
-        if await utils.get_ocr_txt_position(ocr_output, "传送"):
+        if await utils.match_ocr_txt(ocr_output, "传送"):
             log.info("当前正在同意传送页面")
             await utils.ocr_click_txts(page, ocr_output, ["确认"])
             return True
