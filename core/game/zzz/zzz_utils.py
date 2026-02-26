@@ -58,11 +58,11 @@ async def agree_teleport(page: Page) -> bool:
     for i in range(5):
         await brswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
-        if await utils.match_ocr_txt(ocr_output, "传送"):
+        if await utils.match_ocr_txt(ocr_output, ["传送"]):
             log.info("当前正在同意传送页面")
             await utils.ocr_click_txts(page, ocr_output, ["确认"])
             return True
-        await page.wait_for_timeout(1000)
+        await utils.sleep(page, 1)
     log.warning("没有找到同意传送页面")
     return False
 
@@ -75,5 +75,5 @@ async def wait_for_teleport(page: Page) -> bool:
         if game_status == Game_Status.Street:
             log.info("已到达目的地")
             return True
-        await page.wait_for_timeout(1000)
+        await utils.sleep(page, 1)
     return False

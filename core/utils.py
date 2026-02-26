@@ -15,29 +15,32 @@ def get_img_file_path(file_name):
 SCREENSHOT_PATH = get_img_file_path("screenshot.png")
 
 
-async def match_ocr_txts(ocr_output: types.OCR_Results, match_txt: str):
+async def sleep(page: Page, seconds: int):
+    await page.wait_for_timeout(seconds * 1000)
+
+async def match_ocr_txts(ocr_output: types.OCR_Results, match_txts: list[str]):
     txt_positions: list[types.OCR_Result] = []
     for ocr in ocr_output:
         txt, box = ocr.txt, ocr.box
-        if match_txt in txt:
-            log.debug(f"匹配到文本 {match_txt} 于 {txt} , 位置范围 {box}")
-            txt_positions.append(ocr)
-    log.debug(f"共匹配到文本 {match_txt} {len(txt_positions)} 次")
+        for match_txt in match_txts:
+            if match_txt in txt:
+                log.debug(f"匹配到文本 {match_txt} 于 {txt} , 位置范围 {box}")
+                txt_positions.append(ocr)
+    log.debug(f"共匹配到文本列表 {match_txts} {len(txt_positions)} 次")
     return txt_positions
 
 
-async def match_ocr_txt(ocr_output: types.OCR_Results, match_txt: str) -> types.OCR_Result | None:
-    text_positions = await match_ocr_txts(ocr_output, match_txt)
+async def match_ocr_txt(ocr_output: types.OCR_Results, match_txts: list[str]) -> types.OCR_Result | None:
+    text_positions = await match_ocr_txts(ocr_output, match_txts)
     if len(text_positions) > 0:
         return text_positions[0]
 
 
-async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, texts: list[str]):
-    for txt in texts:
-        result = await match_ocr_txt(ocr_output, txt)
-        if result is not None:
-            x, y = get_box_center(result.box)
-            await brswer.click_video(page, x, y)
+async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: list[str]):
+    result = await match_ocr_txt(ocr_output, match_txts)
+    if result is not None:
+        x, y = get_box_center(result.box)
+        await brswer.click_video(page, x, y)
     return ocr_output
 
 
