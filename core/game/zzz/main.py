@@ -49,6 +49,7 @@ async def quick_book_daly_task(page: Page):
         await quick_book_daly_task_main(page, index)
     await open_quick_book(page)
     await utils.cilck_cv_template(page, "./core/template/firework.png")
+    await utils.sleep(page, 5)
 
     
 
