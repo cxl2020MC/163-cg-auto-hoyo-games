@@ -51,8 +51,6 @@ async def quick_book_daily_task(page: Page):
     await utils.click_cv_template(page, "./core/template/firework.png")
     await utils.sleep(page, 5)
 
-    
-
 
 async def quick_book_daily_task_main(page: Page, index: int):
     await open_quick_book(page)

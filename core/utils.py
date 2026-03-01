@@ -41,7 +41,7 @@ async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: 
     if result is not None:
         x, y = get_box_center(result.box)
         await broswer.click_video(page, x, y)
-    return ocr_output
+    return result
 
 
 def get_box_center(box: list):
