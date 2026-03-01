@@ -72,9 +72,7 @@ async def quick_book_daily_task_main(page: Page, index: int):
                 ocr_output = await ocr.ocr_image()
                 await utils.ocr_click_txts(page, ocr_output, ["一杯汀曼特调"])
                 await utils.sleep(page, 3)
-                await broswer.screen_shot(page)
-                ocr_output = await ocr.ocr_image()
-                await utils.ocr_click_txts(page, ocr_output, ["确认"])
+                await zzz_utils.click_confirm(page)
 
         case _:
             log.error("无法识别的任务id")

@@ -81,7 +81,7 @@ async def wait_for_teleport(page: Page) -> bool:
 
 
 # 点击弹窗确认按钮
-async def click_confirm(page: Page, ocr_result: types.OCR_Results):
+async def click_confirm(page: Page):
     for i in range(5):
         await broswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
