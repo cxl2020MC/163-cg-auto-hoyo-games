@@ -2,7 +2,7 @@ from playwright.async_api import Page
 
 from . import zzz_utils
 
-from ... import brswer
+from ... import broswer
 from ... import ocr
 from ... import utils
 
@@ -11,12 +11,12 @@ from ...log import logger as log
 
 async def main(page: Page):
     await goto_game_home(page)
-    await quick_book_daly_task(page)
+    await quick_book_daily_task(page)
 
 
 async def goto_game_home(page: Page):
     for _ in range(1000):
-        await brswer.screen_shot(page)
+        await broswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
         await utils.ocr_click_txts(page, ocr_output, ["点击进入", "点击登录", "确定", "今日到账"])
         if await utils.match_ocr_txt(ocr_output, ["星期"]):
@@ -32,31 +32,31 @@ async def goto_game_home(page: Page):
 
 async def open_quick_book(page: Page):
     for _ in range(10):
-        await brswer.screen_shot(page)
+        await broswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
         if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
             log.info("当前正在快捷手册页面")
             return True
         else:
             log.info("当前不是快捷手册页面")
-            await utils.cilck_cv_template(page, "./core/template/kjsc.png")
+            await utils.click_cv_template(page, "./core/template/kjsc.png")
         await utils.sleep(page, 1)
     return False
 
 
-async def quick_book_daly_task(page: Page):
+async def quick_book_daily_task(page: Page):
     for index in range(1):
-        await quick_book_daly_task_main(page, index)
+        await quick_book_daily_task_main(page, index)
     await open_quick_book(page)
-    await utils.cilck_cv_template(page, "./core/template/firework.png")
+    await utils.click_cv_template(page, "./core/template/firework.png")
     await utils.sleep(page, 5)
 
     
 
 
-async def quick_book_daly_task_main(page: Page, index: int):
+async def quick_book_daily_task_main(page: Page, index: int):
     await open_quick_book(page)
-    await brswer.screen_shot(page)
+    await broswer.screen_shot(page)
     ocr_output = await ocr.ocr_image()
     match index:
         case 0:
@@ -68,15 +68,15 @@ async def quick_book_daly_task_main(page: Page, index: int):
                 await utils.ocr_click_txts(page, res, ["前往"])
                 await zzz_utils.agree_teleport(page)
                 await zzz_utils.wait_for_teleport(page)
-                await utils.cilck_cv_template(page, "./core/template/jh.png", 0.7)
+                await utils.click_cv_template(page, "./core/template/jh.png", 0.7)
                 await utils.sleep(page, 3)
-                await brswer.screen_shot(page)
+                await broswer.screen_shot(page)
                 ocr_output = await ocr.ocr_image()
                 await utils.ocr_click_txts(page, ocr_output, ["一杯汀曼特调"])
                 await utils.sleep(page, 3)
-                await brswer.screen_shot(page)
+                await broswer.screen_shot(page)
                 ocr_output = await ocr.ocr_image()
-                await utils.ocr_click_txts(page, res, ["确定"])
+                await utils.ocr_click_txts(page, ocr_output, ["确认"])
 
         case _:
             log.error("无法识别的任务id")

@@ -23,7 +23,7 @@ async def ocr_image_old(image_path: str = str(_image_path)) -> RapidOCROutput | 
 
 async def ocr_image(image_path: str = str(_image_path)) -> types.OCR_Results:
     result = await asyncio.to_thread(engine, image_path)
-    print(result)
+    log.debug(result)
     await asyncio.to_thread(result.vis, str(utils.get_img_file_path("vis_det_rec.jpg")))
     if isinstance(result, RapidOCROutput):
         result = to_ocr_result(result)

@@ -11,6 +11,8 @@ class _Account(BaseModel):
 class _Config(BaseModel):
     image_change_dir: str = './img'
     data_dir: str = './data'
+    push_token: str = ''
+    push_url: str = ''
     accounts: dict[str, _Account]
 
 

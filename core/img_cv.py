@@ -12,7 +12,7 @@ from .log import logger as log
 #     return res
 
 
-async def mach_template(img_path: str, template_path: str):
+async def match_template(img_path: str, template_path: str):
     img = await asyncio.to_thread(cv2.imread, img_path, cv2.IMREAD_COLOR_BGR)
     template_img = await asyncio.to_thread(cv2.imread, template_path, cv2.IMREAD_COLOR_BGR)
     assert img is not None
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     template_path = r".\core\template\jh.png"
     # img = cv2.imread(img_path, cv2.IMREAD_COLOR_BGR)
     # template_img = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
-    res = asyncio.run(mach_template(img_path, template_path))
+    res = asyncio.run(match_template(img_path, template_path))
     print(res)
     # threshold = 0.8
     # loc = np.where( res >= threshold)
