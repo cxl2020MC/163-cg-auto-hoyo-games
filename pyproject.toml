@@ -13,4 +13,5 @@ dependencies = [
     "playwright>=1.57.0",
     "pydantic>=2.12.5",
     "rapidocr>=3.4.5",
+    "schedule",
 ]

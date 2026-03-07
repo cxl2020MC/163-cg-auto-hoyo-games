@@ -42,7 +42,7 @@ async def check_game_status(page: Page, ocr_result: types.OCR_Results):
 # 返回街区
 async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
 
-    cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), "./core/template/tc.png")
+    cv_result = await img_cv.match_template(str(utils.SCREENSHOT_PATH), "./core/template/tc.png")
 
     cv_box_center = utils.get_cv_box_center(cv_result)
     if cv_box_center:

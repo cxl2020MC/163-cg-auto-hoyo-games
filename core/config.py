@@ -22,5 +22,3 @@ with open("./data/config.json", 'r', encoding='utf-8') as f:
 
 
 CHANGE_IMG_DIR = Path(config.image_change_dir)
-
-SCREENSHOT_PATH = CHANGE_IMG_DIR / "screenshot.png"

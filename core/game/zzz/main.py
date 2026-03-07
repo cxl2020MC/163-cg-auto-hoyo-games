@@ -71,7 +71,7 @@ async def quick_book_daily_task_main(page: Page, index: int):
                 await broswer.screen_shot(page)
                 ocr_output = await ocr.ocr_image()
                 await utils.ocr_click_txts(page, ocr_output, ["一杯汀曼特调"])
-                await utils.sleep(page, 3)
+                await utils.sleep(page, 1)
                 await zzz_utils.click_confirm(page)
 
         case _:

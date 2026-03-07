@@ -72,7 +72,7 @@ def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, 
 
 
 async def click_cv_template(page: Page, template_path: str, threshold: float = 0.8):
-    cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), template_path)
+    cv_result = await img_cv.match_template(str(SCREENSHOT_PATH), template_path)
     match_res = get_cv_box_center(cv_result, threshold)
     if match_res:
         log.info(f"在 {match_res} 找到 {template_path}")
