@@ -84,17 +84,21 @@ async def quick_book_daily_task_main(page: Page, index: int):
                 await zzz_utils.wait_for_teleport(page)
                 await utils.click_cv_template(page, "./core/template/jh.png", 0.7)
                 await utils.sleep(page, 3)
-                await broswer.screen_shot(page)
-                ocr_output = await ocr.ocr_image()
                 for _ in range(10):
+                    await broswer.screen_shot(page)
+                    ocr_output = await ocr.ocr_image()
                     if await utils.ocr_click_txts(page, ocr_output, ["开", "開"]):
                         break
-                    await utils.sleep(page, 1)
+                await utils.sleep(page, 2)
                 for _ in range(5):
+                    await broswer.screen_shot(page)
+                    ocr_output = await ocr.ocr_image()
                     if await utils.match_ocr_txt(ocr_output, ["滑动屏幕"]):
                         page_size = await utils.get_page_size(page)
                         if page_size:
                             await utils.drag(page, (page_size[0]*0.1, page_size[1]/2), (page_size[0]*0.9, page_size[1]/2))
+                    else:
+                        break
                     await utils.sleep(page, 1)
                 await zzz_utils.click_confirm(page)
                 await zzz_utils.click_confirm(page)
