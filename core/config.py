@@ -22,3 +22,9 @@ with open("./data/config.json", 'r', encoding='utf-8') as f:
 
 
 CHANGE_IMG_DIR = Path(config.image_change_dir)
+
+def get_img_file_path(file_name):
+    return Path(CHANGE_IMG_DIR, file_name)
+
+
+SCREENSHOT_PATH = get_img_file_path("screenshot.png")

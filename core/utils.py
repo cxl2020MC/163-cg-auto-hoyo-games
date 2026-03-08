@@ -8,11 +8,7 @@ from . import config, types, img_cv
 from .log import logger as log
 
 
-def get_img_file_path(file_name):
-    return Path(config.CHANGE_IMG_DIR, file_name)
 
-
-SCREENSHOT_PATH = get_img_file_path("screenshot.png")
 
 
 async def sleep(page: Page, seconds: int):
@@ -72,10 +68,30 @@ def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, 
 
 
 async def click_cv_template(page: Page, template_path: str, threshold: float = 0.8):
-    cv_result = await img_cv.match_template(str(SCREENSHOT_PATH), template_path)
+    cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), template_path)
     match_res = get_cv_box_center(cv_result, threshold)
     if match_res:
         log.info(f"在 {match_res} 找到 {template_path}")
         x, y = match_res
         await broswer.click_video(page, x, y)
         return True
+    
+async def drag(page: Page, start: tuple[float, float], end: tuple[float, float], step: int = 20):
+    log.info(f"从 {start} 拖动到 {end}")
+    # video_dom = page.locator("video")
+    await page.mouse.move(start[0], start[1])
+    await page.mouse.down()
+    await page.mouse.move(end[0], end[1], steps=step)
+    await page.mouse.up()
+    log.info(f"完成拖动")
+
+    return True
+
+async def get_page_size(page: Page):
+    video_dom = page.locator("video")
+    bounding_box = await video_dom.bounding_box()
+    if bounding_box:
+        width = bounding_box["width"]
+        height = bounding_box["height"]
+        log.info(f"页面大小: {width}x{height}")
+        return (width, height)

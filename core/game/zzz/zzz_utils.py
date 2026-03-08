@@ -42,7 +42,7 @@ async def check_game_status(page: Page, ocr_result: types.OCR_Results):
 # 返回街区
 async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
 
-    cv_result = await img_cv.match_template(str(utils.SCREENSHOT_PATH), "./core/template/tc.png")
+    cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), "./core/template/tc.png")
 
     cv_box_center = utils.get_cv_box_center(cv_result)
     if cv_box_center:
@@ -61,7 +61,7 @@ async def agree_teleport(page: Page) -> bool:
         log.debug(f"第{i+1}次检查同意传送页面")
         if await utils.match_ocr_txt(ocr_output, ["传送"]):
             log.info("当前正在同意传送页面")
-            await utils.ocr_click_txts(page, ocr_output, ["确认"])
+            await click_confirm(page)
             return True
         await utils.sleep(page, 1)
     log.warning("没有找到同意传送页面")
