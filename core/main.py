@@ -14,6 +14,6 @@ async def main():
                 page = browser.pages[0]
             else:
                 page = await browser.new_page()
-            await cg_163.launch_game(page, account.username, account.password)
-            await zzz_main.main(page)
+            await cg_163.launch_game(page, account.username, account.password, account.game)
+            await zzz_main.main(page, account)
             await browser.close()

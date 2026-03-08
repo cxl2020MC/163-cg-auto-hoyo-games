@@ -20,7 +20,7 @@ def schedule_main():
         log.error(f"执行定时任务失败: {e}")
 
 
-schedule.every().day.at("6:00").do(schedule_main)
+schedule.every().day.at("06:00").do(schedule_main)
 
 
 if __name__ == "__main__":

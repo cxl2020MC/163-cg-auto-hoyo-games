@@ -5,20 +5,25 @@ from . import zzz_utils
 from ... import broswer
 from ... import ocr
 from ... import utils
+from ... import config
+from ... import push
 
 from ...log import logger as log
 
 
-async def main(page: Page):
-    await goto_game_home(page)
-    await quick_book_daily_task(page)
+async def main(page: Page, account: config._Account):
+    await goto_game_home(page, account)
+    await quick_book_daily_task(page, account)
 
 
-async def goto_game_home(page: Page):
+async def goto_game_home(page: Page, account: config._Account):
     for _ in range(1000):
         await broswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
-        await utils.ocr_click_txts(page, ocr_output, ["点击进入", "点击登录", "确定", "今日到账"])
+        await utils.ocr_click_txts(page, ocr_output, ["点击进入", "点击登录", "重新登录", "确定"])
+        if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
+            log.info("领取月卡奖励")
+            await push.screen_shot_and_push(page, account, "月卡奖励")
         if await utils.match_ocr_txt(ocr_output, ["星期"]):
             log.info("找到星期")
             return
@@ -44,15 +49,16 @@ async def open_quick_book(page: Page):
     return False
 
 
-async def quick_book_daily_task(page: Page):
+async def quick_book_daily_task(page: Page, account: config._Account):
     for index in range(2):
-        await quick_book_daily_task_main(page, index)
+        await quick_book_daily_task_main(page, index, account)
     await open_quick_book(page)
     await utils.click_cv_template(page, "./core/template/firework.png")
+    await push.screen_shot_and_push(page, account, "烟花任务完成")
     await utils.sleep(page, 5)
 
 
-async def quick_book_daily_task_main(page: Page, index: int):
+async def quick_book_daily_task_main(page: Page, index: int, account: config._Account):
     await open_quick_book(page)
     await broswer.screen_shot(page)
     ocr_output = await ocr.ocr_image()
@@ -72,6 +78,7 @@ async def quick_book_daily_task_main(page: Page, index: int):
                 ocr_output = await ocr.ocr_image()
                 await utils.ocr_click_txts(page, ocr_output, ["一杯汀曼特调"])
                 await utils.sleep(page, 1)
+                await push.screen_shot_and_push(page, account, "咖啡任务完成")
                 await zzz_utils.click_confirm(page)
         case 1:
             divine_box = await utils.match_ocr_txt(ocr_output, ["占卜"])
@@ -99,11 +106,11 @@ async def quick_book_daily_task_main(page: Page, index: int):
                             await utils.drag(page, (page_size[0]*0.1, page_size[1]/2), (page_size[0]*0.9, page_size[1]/2))
                     else:
                         break
-                    await utils.sleep(page, 1)
                 await zzz_utils.click_confirm(page)
+                await utils.sleep(page, 2)
+                await push.screen_shot_and_push(page, account, "占卜任务完成")
                 await zzz_utils.click_confirm(page)
-                await utils.sleep(page, 3)
-                await utils.click_cv_template(page, "./core/template/tc.png")
+                await goto_game_home(page, account)
 
 
 

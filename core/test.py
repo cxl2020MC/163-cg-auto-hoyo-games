@@ -15,12 +15,12 @@ async def main():
             else:
                 page = await browser.new_page()
             await cg_163.launch_game(page, account.username, account.password)
-            await test(page)
+            await test(page, account)
             await browser.close()
 
 
-async def test(page: Page):
-    await zzz_main.goto_game_home(page)
+async def test(page: Page, account: config._Account):
+    await zzz_main.goto_game_home(page, account)
     while True:
         await broswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()

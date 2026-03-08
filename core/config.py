@@ -1,11 +1,19 @@
 from pydantic import BaseModel
+from enum import StrEnum
 from pathlib import Path
 from .log import logger as log
 
 
+class GameEnum(StrEnum):
+    jql_gjf = "jql_gjf"
+    jql_gf = "jql_gf"
+
 class _Account(BaseModel):
     username: str
     password: str
+    id: str | None = None
+    game: GameEnum = GameEnum.jql_gjf
+    group_id: int | None = None
 
 
 class _Config(BaseModel):
