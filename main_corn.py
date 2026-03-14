@@ -3,6 +3,7 @@ from core.log import logger as log
 import asyncio
 import schedule
 import time
+import traceback
 
 
 def run(interval=1):
@@ -16,8 +17,8 @@ def schedule_main():
     try:
         asyncio.run(main.main())
         log.debug("执行定时任务成功")
-    except Exception as e:
-        log.error(f"执行定时任务失败: {e}")
+    except Exception:
+        log.error(f"执行定时任务失败: {traceback.format_exc()}")
 
 
 schedule.every().day.at("06:00").do(schedule_main)

@@ -48,7 +48,7 @@ def get_box_center(box: list):
     return (float(center_x), float(center_y))
 
 
-def get_cv_box_center(cv_result: types.CV_Result, threshold: float = 0.8):
+def get_cv_box_center(cv_result: types.CV_Result, threshold: float = 0.75):
     if cv_result.score > threshold:
         x = cv_result.x + cv_result.width / 2
         y = cv_result.y + cv_result.height / 2
@@ -67,7 +67,7 @@ def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, 
     return func_result
 
 
-async def click_cv_template(page: Page, template_path: str, threshold: float = 0.8):
+async def click_cv_template(page: Page, template_path: str, threshold: float = 0.75):
     cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), template_path)
     match_res = get_cv_box_center(cv_result, threshold)
     if match_res:
