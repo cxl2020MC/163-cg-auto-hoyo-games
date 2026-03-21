@@ -91,3 +91,13 @@ async def click_confirm(page: Page):
         await utils.sleep(page, 1)
     log.warning("没有找到确认按钮")
     return False
+
+async def click_interaction(page: Page):
+    for i in range(5):
+        await broswer.screen_shot(page)
+        log.debug(f"第{i+1}次检查交互按钮")
+        if await utils.click_cv_template(page, "./core/template/jh.png"):
+            return True
+        await utils.sleep(page, 1)
+    log.warning("没有找到交互按钮")
+    return False

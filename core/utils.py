@@ -55,7 +55,7 @@ def get_cv_box_center(cv_result: types.CV_Result, threshold: float = 0.75):
         return (x, y)
 
 
-def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, float]):
+def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, float]) -> types.OCR_Results:
     func_result: list[types.OCR_Result] = []
     for ocr in ocr_output:
         txt, box = ocr.txt, ocr.box

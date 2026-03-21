@@ -21,7 +21,7 @@ class _Config(BaseModel):
     data_dir: str = './data'
     push_token: str = ''
     push_url: str = ''
-    accounts: dict[str, _Account]
+    accounts: list[_Account]
 
 
 with open("./data/config.json", 'r', encoding='utf-8') as f:

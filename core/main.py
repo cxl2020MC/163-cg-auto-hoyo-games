@@ -7,9 +7,9 @@ from collections.abc import Callable, Awaitable
 
 async def main():
     accounts = config.config.accounts
-    for id, account in accounts.items():
-        log.info(f"处理账号id为 {id} 的账号")
-        await playwright_run(id, account, zzz_main.main)
+    for account in accounts:
+        log.info(f"处理账号id为 {account.id} 的账号")
+        await playwright_run(account.id, account, zzz_main.main)
   
 
     

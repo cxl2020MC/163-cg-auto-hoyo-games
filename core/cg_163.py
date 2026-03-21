@@ -1,12 +1,16 @@
 from .log import logger as log
-from playwright.async_api import Page
+from playwright.async_api import Page, expect
 
 
 async def check_login(page: Page, phone, password):
-    log.debug("等待页面加载完成")
-    await page.wait_for_load_state("load")
     log.debug("检查登录")
-    login_status = await page.get_by_text("登录").is_visible()
+    # login_status = await page.get_by_text("登录").is_visible()
+    try:
+        await expect(page.get_by_text("登录")).to_be_visible()
+        login_status = True
+    except AssertionError:
+        login_status = False
+
     log.info(f"需要登录: {login_status}")
     if login_status:
         # await page.get_by_role("banner").get_by_text("登录").dispatch_event('click')
@@ -24,4 +28,20 @@ async def check_login(page: Page, phone, password):
 async def launch_game(page: Page, cg_phone, cg_password, game_code: str = "jql_gjf"):
     await page.goto(f"https://cg.163.com/?action_link=cloudgaming%3A%2F%2Fstartgame%3Fgame_code%3D{game_code}%26game_open_action%3Dthis_game")
     await check_login(page, cg_phone, cg_password)
+
+async def check_cg_game_activity(page: Page):
+    log.debug("检查云游戏活动")
+    loctor = page.locator(".pc_close")
+    try:
+        await expect(loctor).to_be_visible()
+        activity_status = True
+    except AssertionError:
+        activity_status = False
+
+    log.info(f"云游戏活动页面: {activity_status}")
+    if activity_status:
+        log.info("发现云游戏活动，点击关闭")
+        await loctor.click()
+
+    return activity_status
 

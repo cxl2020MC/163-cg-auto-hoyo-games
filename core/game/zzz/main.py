@@ -44,6 +44,8 @@ async def open_quick_book(page: Page):
             return True
         else:
             log.info("当前不是快捷手册页面")
+            # 刷新截图，防止二次点击，导致切换快捷手册页面
+            await broswer.screen_shot(page)
             await utils.click_cv_template(page, "./core/template/kjsc.png")
         await utils.sleep(page, 1)
     return False
@@ -54,6 +56,7 @@ async def quick_book_daily_task(page: Page, account: config._Account):
         await quick_book_daily_task_main(page, index, account)
     await open_quick_book(page)
     await utils.click_cv_template(page, "./core/template/firework.png")
+    await utils.sleep(page, 2)
     await push.screen_shot_and_push(page, account, "烟花任务完成")
     await utils.sleep(page, 5)
 
@@ -72,7 +75,7 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await utils.ocr_click_txts(page, res, ["前往"])
                 await zzz_utils.agree_teleport(page)
                 await zzz_utils.wait_for_teleport(page)
-                await utils.click_cv_template(page, "./core/template/jh.png", 0.7)
+                await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
                 await broswer.screen_shot(page)
                 ocr_output = await ocr.ocr_image()
@@ -89,7 +92,7 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await utils.ocr_click_txts(page, res, ["前往"])
                 await zzz_utils.agree_teleport(page)
                 await zzz_utils.wait_for_teleport(page)
-                await utils.click_cv_template(page, "./core/template/jh.png", 0.7)
+                await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
                 for _ in range(10):
                     await broswer.screen_shot(page)
