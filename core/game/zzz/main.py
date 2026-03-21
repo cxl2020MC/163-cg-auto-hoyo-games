@@ -52,7 +52,7 @@ async def open_quick_book(page: Page):
 
 
 async def quick_book_daily_task(page: Page, account: config._Account):
-    for index in range(2):
+    for index in range(3):
         await quick_book_daily_task_main(page, index, account)
     await open_quick_book(page)
     await utils.click_cv_template(page, "./core/template/firework.png")
@@ -114,7 +114,52 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await push.screen_shot_and_push(page, account, "占卜任务完成")
                 await zzz_utils.click_confirm(page)
                 await goto_game_home(page, account)
-
+        case 2:
+            operate_box = await utils.match_ocr_txt(ocr_output, ["录像店"])
+            if operate_box:
+                box = operate_box.box
+                res = utils.get_ocr_box_in_range_x(
+                    ocr_output, (box[0][0], box[1][0]))
+                await utils.ocr_click_txts(page, res, ["前往"])
+                await zzz_utils.agree_teleport(page)
+                await zzz_utils.wait_for_teleport(page)
+                await zzz_utils.click_interaction(page)
+                await utils.sleep(page, 3)
+                await broswer.screen_shot(page)
+                ocr_output = await ocr.ocr_image()
+                await utils.ocr_click_txts(page, ocr_output, ["查看经营状况"])
+                await utils.sleep(page, 2)
+                await push.screen_shot_and_push(page, account, "开始录像店任务")
+                for _ in range(5):
+                    await broswer.screen_shot(page)
+                    if await utils.click_cv_template(page, "./core/template/tc2.png"):
+                        break
+                    await utils.sleep(page, 1)
+                await utils.sleep(page, 1)
+                for _ in range(5):
+                    await broswer.screen_shot(page)
+                    if await utils.click_cv_template(page, "./core/template/xzxcy.png"):
+                        break
+                    await utils.sleep(page, 1)
+                await zzz_utils.click_confirm(page)
+                for _ in range(10):
+                    await broswer.screen_shot(page)
+                    if await utils.click_cv_template(page, "./core/template/xzxclxd.png"):
+                        break
+                    await utils.sleep(page, 1)
+                await utils.sleep(page, 2)
+                await broswer.screen_shot(page)
+                ocr_output = await ocr.ocr_image()
+                await utils.ocr_click_txts(page, ocr_output, ["推荐上架"])
+                await utils.sleep(page, 2)
+                await broswer.screen_shot(page)
+                ocr_output = await ocr.ocr_image()
+                await utils.ocr_click_txts(page, ocr_output, ["开始营业"])
+                await utils.sleep(page, 2)
+                await zzz_utils.click_confirm(page)
+                await push.screen_shot_and_push(page, account, "录像店任务完成")
+                await zzz_utils.click_confirm(page)
+                await goto_game_home(page, account)
 
 
         case _:

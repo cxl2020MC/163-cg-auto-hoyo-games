@@ -86,7 +86,7 @@ async def click_confirm(page: Page):
         await broswer.screen_shot(page)
         ocr_output = await ocr.ocr_image()
         log.debug(f"第{i+1}次检查确认按钮")
-        if await utils.ocr_click_txts(page, ocr_output, ["确认"]):
+        if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"]):
             return True
         await utils.sleep(page, 1)
     log.warning("没有找到确认按钮")
