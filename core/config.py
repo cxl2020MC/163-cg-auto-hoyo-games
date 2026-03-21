@@ -6,7 +6,7 @@ from .log import logger as log
 
 class GameEnum(StrEnum):
     jql_gjf = "jql_gjf"
-    jql_gf = "jql_gf"
+    jql = "jql"
 
 class _Account(BaseModel):
     username: str
