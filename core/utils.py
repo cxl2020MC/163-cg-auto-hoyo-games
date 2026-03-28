@@ -1,39 +1,50 @@
-from pathlib import Path
 from playwright.async_api import Page
 
 from . import broswer
 
 
-from . import config, types, img_cv
+from . import config, types, img_cv, ocr
 from .log import logger as log
-
-
-
 
 
 async def sleep(page: Page, seconds: int):
     await page.wait_for_timeout(seconds * 1000)
 
-async def match_ocr_txts(ocr_output: types.OCR_Results, match_txts: list[str]):
+async def screen_shot_and_ocr(page: Page) -> types.OCR_Results:
+    await broswer.screen_shot(page)
+    ocr_output = await ocr.ocr_image()
+    return ocr_output
+
+async def get_ocr(page: Page, ocr_output: types.OCR_Results|None = None) -> types.OCR_Results:
+    if ocr_output is None:
+        ocr_output = await screen_shot_and_ocr(page)
+    return ocr_output
+
+async def match_ocr_txts(ocr_output: types.OCR_Results, match_txts: list[str],  exact: bool | None = None):
     txt_positions: list[types.OCR_Result] = []
     for ocr in ocr_output:
         txt, box = ocr.txt, ocr.box
         for match_txt in match_txts:
-            if match_txt in txt:
-                log.debug(f"匹配到文本 {match_txt} 于 {txt} , 位置范围 {box}")
-                txt_positions.append(ocr)
+            if exact:
+                if match_txt == txt:
+                    log.debug(f"精确匹配到文本 {match_txt}, 位置范围 {box}")
+                    txt_positions.append(ocr)
+            else:
+                if match_txt in txt:
+                    log.debug(f"匹配到文本 {match_txt} 于 {txt} , 位置范围 {box}")
+                    txt_positions.append(ocr)
     log.debug(f"共匹配到文本列表 {match_txts} {len(txt_positions)} 次")
     return txt_positions
 
 
-async def match_ocr_txt(ocr_output: types.OCR_Results, match_txts: list[str]) -> types.OCR_Result | None:
-    text_positions = await match_ocr_txts(ocr_output, match_txts)
+async def match_ocr_txt(ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None) -> types.OCR_Result | None:
+    text_positions = await match_ocr_txts(ocr_output, match_txts, exact)
     if len(text_positions) > 0:
         return text_positions[0]
 
 
-async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: list[str]):
-    result = await match_ocr_txt(ocr_output, match_txts)
+async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None):
+    result = await match_ocr_txt(ocr_output, match_txts, exact)
     if result is not None:
         x, y = get_box_center(result.box)
         await broswer.click_video(page, x, y)
@@ -75,7 +86,8 @@ async def click_cv_template(page: Page, template_path: str, threshold: float = 0
         x, y = match_res
         await broswer.click_video(page, x, y)
         return True
-    
+
+
 async def drag(page: Page, start: tuple[float, float], end: tuple[float, float], step: int = 20):
     log.info(f"从 {start} 拖动到 {end}")
     # video_dom = page.locator("video")
@@ -86,6 +98,7 @@ async def drag(page: Page, start: tuple[float, float], end: tuple[float, float],
     log.info(f"完成拖动")
 
     return True
+
 
 async def get_page_size(page: Page):
     video_dom = page.locator("video")

@@ -44,7 +44,7 @@ async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
 
     cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), "./core/template/tc.png")
 
-    cv_box_center = utils.get_cv_box_center(cv_result)
+    cv_box_center = utils.get_cv_box_center(cv_result, 0.65)
     if cv_box_center:
         log.info(f"在 {cv_box_center} 找到退出按钮")
         x, y = cv_box_center
@@ -56,8 +56,7 @@ async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
 
 async def agree_teleport(page: Page) -> bool:
     for i in range(5):
-        await broswer.screen_shot(page)
-        ocr_output = await ocr.ocr_image()
+        ocr_output = await utils.get_ocr(page)
         log.debug(f"第{i+1}次检查同意传送页面")
         if await utils.match_ocr_txt(ocr_output, ["传送"]):
             log.info("当前正在同意传送页面")
@@ -70,8 +69,7 @@ async def agree_teleport(page: Page) -> bool:
 
 async def wait_for_teleport(page: Page) -> bool:
     for i in range(60):
-        await broswer.screen_shot(page)
-        ocr_output = await ocr.ocr_image()
+        ocr_output = await utils.get_ocr(page)
         game_status = await check_game_status(page, ocr_output)
         if game_status == Game_Status.Street:
             log.info("已到达目的地")
@@ -83,8 +81,7 @@ async def wait_for_teleport(page: Page) -> bool:
 # 点击弹窗确认按钮
 async def click_confirm(page: Page):
     for i in range(5):
-        await broswer.screen_shot(page)
-        ocr_output = await ocr.ocr_image()
+        ocr_output = await utils.get_ocr(page)
         log.debug(f"第{i+1}次检查确认按钮")
         if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"]):
             return True

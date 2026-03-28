@@ -17,10 +17,9 @@ async def main(page: Page, account: config._Account):
 
 
 async def goto_game_home(page: Page, account: config._Account):
-    for _ in range(1000):
-        await broswer.screen_shot(page)
-        ocr_output = await ocr.ocr_image()
-        await utils.ocr_click_txts(page, ocr_output, ["点击进入", "点击登录", "重新登录", "确定"])
+    for _ in range(500):
+        ocr_output = await utils.get_ocr(page)
+        await utils.ocr_click_txts(page, ocr_output, ["点击进入游戏", "进入游戏", "点击登录", "重新登录", "确定", "确认"])
         if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
             log.info("领取月卡奖励")
             await push.screen_shot_and_push(page, account, "月卡奖励")
@@ -36,9 +35,8 @@ async def goto_game_home(page: Page, account: config._Account):
 
 
 async def open_quick_book(page: Page):
-    for _ in range(10):
-        await broswer.screen_shot(page)
-        ocr_output = await ocr.ocr_image()
+    for _ in range(15):
+        ocr_output = await utils.get_ocr(page)
         if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
             log.info("当前正在快捷手册页面")
             return True
@@ -63,8 +61,7 @@ async def quick_book_daily_task(page: Page, account: config._Account):
 
 async def quick_book_daily_task_main(page: Page, index: int, account: config._Account):
     await open_quick_book(page)
-    await broswer.screen_shot(page)
-    ocr_output = await ocr.ocr_image()
+    ocr_output = await utils.get_ocr(page)
     match index:
         case 0:
             cofee_box = await utils.match_ocr_txt(ocr_output, ["咖啡"])
@@ -77,8 +74,7 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await zzz_utils.wait_for_teleport(page)
                 await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
-                await broswer.screen_shot(page)
-                ocr_output = await ocr.ocr_image()
+                ocr_output = await utils.get_ocr(page)
                 await utils.ocr_click_txts(page, ocr_output, ["一杯汀曼特调"])
                 await utils.sleep(page, 1)
                 await push.screen_shot_and_push(page, account, "咖啡任务完成")
@@ -95,14 +91,12 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
                 for _ in range(10):
-                    await broswer.screen_shot(page)
-                    ocr_output = await ocr.ocr_image()
+                    ocr_output = await utils.get_ocr(page)
                     if await utils.ocr_click_txts(page, ocr_output, ["开", "開"]):
                         break
                 await utils.sleep(page, 2)
-                for _ in range(5):
-                    await broswer.screen_shot(page)
-                    ocr_output = await ocr.ocr_image()
+                for _ in range(10):
+                    ocr_output = await utils.get_ocr(page)
                     if await utils.match_ocr_txt(ocr_output, ["滑动屏幕"]):
                         page_size = await utils.get_page_size(page)
                         if page_size:
@@ -125,8 +119,7 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await zzz_utils.wait_for_teleport(page)
                 await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
-                await broswer.screen_shot(page)
-                ocr_output = await ocr.ocr_image()
+                ocr_output = await utils.get_ocr(page)
                 await utils.ocr_click_txts(page, ocr_output, ["查看经营状况"])
                 await utils.sleep(page, 2)
                 await push.screen_shot_and_push(page, account, "开始录像店任务")
@@ -148,12 +141,10 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                         break
                     await utils.sleep(page, 1)
                 await utils.sleep(page, 2)
-                await broswer.screen_shot(page)
-                ocr_output = await ocr.ocr_image()
+                ocr_output = await utils.get_ocr(page)
                 await utils.ocr_click_txts(page, ocr_output, ["推荐上架"])
                 await utils.sleep(page, 2)
-                await broswer.screen_shot(page)
-                ocr_output = await ocr.ocr_image()
+                ocr_output = await utils.get_ocr(page)
                 await utils.ocr_click_txts(page, ocr_output, ["开始营业"])
                 await utils.sleep(page, 2)
                 await zzz_utils.click_confirm(page)

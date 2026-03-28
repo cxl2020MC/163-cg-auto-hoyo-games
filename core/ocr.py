@@ -1,10 +1,8 @@
 from rapidocr import RapidOCR
-# from rapidocr.utils.output import RapidOCROutput
 from rapidocr.main import RapidOCROutput
 import asyncio
-from playwright.async_api import Page
 
-from . import utils, types, config
+from . import types, config
 from .log import logger as log
 
 
