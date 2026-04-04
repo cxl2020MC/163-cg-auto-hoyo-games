@@ -10,15 +10,18 @@ from .log import logger as log
 async def sleep(page: Page, seconds: int):
     await page.wait_for_timeout(seconds * 1000)
 
+
 async def screen_shot_and_ocr(page: Page) -> types.OCR_Results:
     await broswer.screen_shot(page)
     ocr_output = await ocr.ocr_image()
     return ocr_output
 
-async def get_ocr(page: Page, ocr_output: types.OCR_Results|None = None) -> types.OCR_Results:
+
+async def get_ocr(page: Page, ocr_output: types.OCR_Results | None = None) -> types.OCR_Results:
     if ocr_output is None:
         ocr_output = await screen_shot_and_ocr(page)
     return ocr_output
+
 
 async def match_ocr_txts(ocr_output: types.OCR_Results, match_txts: list[str],  exact: bool | None = None):
     txt_positions: list[types.OCR_Result] = []
@@ -49,6 +52,19 @@ async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: 
         x, y = get_box_center(result.box)
         await broswer.click_video(page, x, y)
     return result
+
+
+async def try_ocr_click_txts(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None, retry_times: int = 3, retry_interval: int = 1):
+    for i in range(retry_times):
+        ocr_output = await get_ocr(page, ocr_output)
+        result = await ocr_click_txts(page, ocr_output, match_txts, exact)
+        if result is not None:
+            return result
+        ocr_output = None
+        log.info(f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
+        await sleep(page, retry_interval)
+    log.warning(f"尝试了 {retry_times} 次，仍未找到文本 {match_txts}")
+    return None
 
 
 def get_box_center(box: list):

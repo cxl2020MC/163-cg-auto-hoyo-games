@@ -74,9 +74,8 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await zzz_utils.wait_for_teleport(page)
                 await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
-                ocr_output = await utils.get_ocr(page)
-                await utils.ocr_click_txts(page, ocr_output, ["一杯汀曼特调"])
-                await utils.sleep(page, 1)
+                await utils.try_ocr_click_txts(page, ["一杯汀曼特调"])
+                await utils.sleep(page, 2)
                 await push.screen_shot_and_push(page, account, "咖啡任务完成")
                 await zzz_utils.click_confirm(page)
         case 1:
@@ -117,11 +116,11 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                 await utils.ocr_click_txts(page, res, ["前往"])
                 await zzz_utils.agree_teleport(page)
                 await zzz_utils.wait_for_teleport(page)
+                # 点击交互按钮
                 await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
-                ocr_output = await utils.get_ocr(page)
-                await utils.ocr_click_txts(page, ocr_output, ["查看经营状况"])
-                await utils.sleep(page, 2)
+                await utils.try_ocr_click_txts(page, ["查看经营状况"])
+                await utils.sleep(page, 3)
                 await push.screen_shot_and_push(page, account, "开始录像店任务")
                 for _ in range(5):
                     await broswer.screen_shot(page)
@@ -140,18 +139,16 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
                     if await utils.click_cv_template(page, "./core/template/xzxclxd.png"):
                         break
                     await utils.sleep(page, 1)
-                await utils.sleep(page, 2)
-                ocr_output = await utils.get_ocr(page)
-                await utils.ocr_click_txts(page, ocr_output, ["推荐上架"])
-                await utils.sleep(page, 2)
-                ocr_output = await utils.get_ocr(page)
-                await utils.ocr_click_txts(page, ocr_output, ["开始营业"])
-                await utils.sleep(page, 2)
+                await utils.sleep(page, 1)
+                await utils.try_ocr_click_txts(page, ["推荐上架"])
+                await utils.sleep(page, 1)
+                await utils.try_ocr_click_txts(page, ["开始营业"])
+                await utils.sleep(page, 1)
                 await zzz_utils.click_confirm(page)
+                await utils.sleep(page, 1)
                 await push.screen_shot_and_push(page, account, "录像店任务完成")
                 await zzz_utils.click_confirm(page)
                 await goto_game_home(page, account)
-
 
         case _:
             log.error("无法识别的任务id")

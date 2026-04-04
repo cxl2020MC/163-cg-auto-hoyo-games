@@ -2,11 +2,14 @@ import aiohttp
 import asyncio
 import base64
 import traceback
+import anyio
 from datetime import datetime
+from pathlib import Path
 from . import config
 from . import broswer
 from .log import logger as log
 from playwright.async_api import Page
+
 
 message_push_tasks = []
 
@@ -36,7 +39,8 @@ async def push_message(group_id: int | None, title: str, content: str):
     else:
         try:
             content = f"{title}\n{content}"
-            await _onebot_v11_push_message(group_id, content)
+            push_api_return = await _onebot_v11_push_message(group_id, content)
+            log.info(f"消息推送成功，返回内容: {push_api_return}")
         except Exception:
             exc = traceback.format_exc()
             log.error(f"推送消息失败: {exc}")
@@ -62,4 +66,15 @@ async def screen_shot_and_push(page: Page, account: config._Account, content: st
     img_cqcode = f"[CQ:image,file=base64://{img_base64}]"
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     content = f"{content}\n{img_cqcode}\n{time_str}"
+    await add_message(account.group_id, title, content)
+
+async def push_video(account: config._Account, content: str, video_path: Path):
+    log.info("进行视频消息推送")
+    title = f"{account.id} - 游戏脚本视频"
+    video_base64 = ""
+    async with await anyio.open_file(video_path, "rb") as f:
+        video_base64 = base64.b64encode(await f.read()).decode("utf-8")
+    video_cqcode = f"[CQ:video,file=base64://{video_base64}]"
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    content = f"{content}\n{video_cqcode}\n{time_str}"
     await add_message(account.group_id, title, content)
