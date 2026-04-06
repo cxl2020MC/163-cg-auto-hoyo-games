@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from enum import StrEnum
 from pathlib import Path
+import tomllib
 from .log import logger as log
 
 
@@ -30,10 +31,14 @@ class _Config(BaseModel):
     game_accounts: list[_GameAccount]
 
 
-with open("./data/config.json", 'r', encoding='utf-8') as f:
-    config = _Config.model_validate_json(f.read())
-    log.debug(config)
+# with open("./data/config.json", 'r', encoding='utf-8') as f:
+#     config = _Config.model_validate_json(f.read())
+#     log.debug(config)
 
+with open("./data/config.toml", 'rb') as f:
+    # config = _Config.model_validate_json(f.read())
+    config = _Config.model_validate(tomllib.load(f))
+    log.debug(config)
 
 CHANGE_IMG_DIR = Path(config.image_change_dir)
 

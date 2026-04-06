@@ -15,6 +15,7 @@ async def check_login(page: Page):
     log.info(f"登录状态: {login_status}")
     return login_status
 
+
 async def auto_login(page: Page, phone, password):
     # await page.get_by_role("banner").get_by_text("登录").dispatch_event('click')
     await page.get_by_placeholder("手机号").fill(phone)
@@ -53,6 +54,7 @@ async def check_cg_game_activity(page: Page):
 
     return activity_status
 
+
 async def check_cg_game_key_position(page: Page):
     log.debug("检查云游戏按键位置")
     loctor = page.locator("div.keylayout")
@@ -68,7 +70,6 @@ async def check_cg_game_key_position(page: Page):
         await loctor.press("F12")
 
     return key_position_status
-
 
 
 async def select_cg_server_run_game_normal_mode(page: Page):

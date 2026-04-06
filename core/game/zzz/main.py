@@ -24,9 +24,12 @@ async def goto_game_home(page: Page, account: config._GameAccount):
         if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
             log.info("领取月卡奖励")
             await push.screen_shot_and_push(page, account, "月卡奖励")
+        if await utils.match_ocr_txt(ocr_output, ["网络请求错误"]):
+            log.warning("网络请求错误，尝试点击重试")
+            await utils.ocr_click_txts(page, ocr_output, ["重试"], exact=True)
         if await utils.match_ocr_txt(ocr_output, ["星期"]):
             log.info("找到星期")
-            return
+            return True
 
         await zzz_utils.return_to_streets(page, ocr_output)
 
@@ -40,6 +43,9 @@ async def open_quick_book(page: Page):
         ocr_output = await utils.get_ocr(page)
         if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
             log.info("当前正在快捷手册页面")
+            if not await utils.match_ocr_txt(ocr_output, ["活跃度"]):
+                await utils.ocr_click_txts(page, ocr_output, ["日常"])
+                await utils.sleep(page, 2)
             return True
         else:
             log.info("当前不是快捷手册页面")
@@ -57,8 +63,9 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
     await utils.click_cv_template(page, "./core/template/firework.png")
     await utils.sleep(page, 2)
     await push.screen_shot_and_push(page, account, "烟花任务完成")
-    await zzz_utils.click_confirm(page)
+    # await zzz_utils.click_confirm(page)
     await goto_game_home(page, account)
+    await ndcm_reward(page, account)
 
 
 async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
@@ -157,25 +164,24 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ga
             raise Exception("无法识别的任务id")
 
 
-
-
 async def open_ndcm(page: Page):
     for _ in range(15):
         ocr_output = await utils.get_ocr(page)
-        if await utils.match_ocr_txt(ocr_output, ["丽都成募"]):
-            log.info("当前正在丽都成募页面")
+        if await utils.match_ocr_txt(ocr_output, ["丽都城募"]):
+            log.info("当前正在丽都城募页面")
             if not await utils.ocr_click_txts(page, ocr_output, ["开启丽都城募"]):
                 return True
         else:
-            log.info("当前不是丽都成募页面")
+            log.info("当前不是丽都城募页面")
             await utils.click_cv_template(page, "./core/template/ndcm.png", threshold=0.7)
         await utils.sleep(page, 1)
     return False
+
 
 async def ndcm_reward(page: Page, account: config._GameAccount):
     await open_ndcm(page)
     await utils.try_ocr_click_txts(page, ["成长任务"])
     await utils.sleep(page, 2)
-    await utils.try_ocr_click_txts(page, ["领取奖励"])
+    await utils.try_ocr_click_txts(page, ["全部领取"])
     await utils.sleep(page, 2)
-    await push.screen_shot_and_push(page, account, "丽都成募奖励")
+    await push.screen_shot_and_push(page, account, "丽都城募奖励")
