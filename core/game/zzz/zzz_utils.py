@@ -83,11 +83,12 @@ async def click_confirm(page: Page):
     for i in range(5):
         ocr_output = await utils.get_ocr(page)
         log.debug(f"第{i+1}次检查确认按钮")
-        if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"]):
+        if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"], exact=True):
             return True
         await utils.sleep(page, 1)
     log.warning("没有找到确认按钮")
     return False
+
 
 async def click_interaction(page: Page):
     for i in range(5):

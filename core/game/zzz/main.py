@@ -11,15 +11,16 @@ from ... import push
 from ...log import logger as log
 
 
-async def main(page: Page, account: config._Account):
+async def main(page: Page, account: config._GameAccount):
     await goto_game_home(page, account)
     await quick_book_daily_task(page, account)
 
 
-async def goto_game_home(page: Page, account: config._Account):
+async def goto_game_home(page: Page, account: config._GameAccount):
     for _ in range(500):
         ocr_output = await utils.get_ocr(page)
-        await utils.ocr_click_txts(page, ocr_output, ["点击进入游戏", "进入游戏", "点击登录", "重新登录", "确定", "确认"])
+        await utils.ocr_click_txts(page, ocr_output, ["点击进入游戏", "进入游戏", "点击登录", "重新登录"])
+        await utils.ocr_click_txts(page, ocr_output, ["确定", "确认"], exact=True)
         if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
             log.info("领取月卡奖励")
             await push.screen_shot_and_push(page, account, "月卡奖励")
@@ -49,17 +50,18 @@ async def open_quick_book(page: Page):
     return False
 
 
-async def quick_book_daily_task(page: Page, account: config._Account):
+async def quick_book_daily_task(page: Page, account: config._GameAccount):
     for index in range(3):
         await quick_book_daily_task_main(page, index, account)
     await open_quick_book(page)
     await utils.click_cv_template(page, "./core/template/firework.png")
     await utils.sleep(page, 2)
     await push.screen_shot_and_push(page, account, "烟花任务完成")
-    await utils.sleep(page, 5)
+    await zzz_utils.click_confirm(page)
+    await goto_game_home(page, account)
 
 
-async def quick_book_daily_task_main(page: Page, index: int, account: config._Account):
+async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
     await open_quick_book(page)
     ocr_output = await utils.get_ocr(page)
     match index:
@@ -153,3 +155,27 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ac
         case _:
             log.error("无法识别的任务id")
             raise Exception("无法识别的任务id")
+
+
+
+
+async def open_ndcm(page: Page):
+    for _ in range(15):
+        ocr_output = await utils.get_ocr(page)
+        if await utils.match_ocr_txt(ocr_output, ["丽都成募"]):
+            log.info("当前正在丽都成募页面")
+            if not await utils.ocr_click_txts(page, ocr_output, ["开启丽都城募"]):
+                return True
+        else:
+            log.info("当前不是丽都成募页面")
+            await utils.click_cv_template(page, "./core/template/ndcm.png", threshold=0.7)
+        await utils.sleep(page, 1)
+    return False
+
+async def ndcm_reward(page: Page, account: config._GameAccount):
+    await open_ndcm(page)
+    await utils.try_ocr_click_txts(page, ["成长任务"])
+    await utils.sleep(page, 2)
+    await utils.try_ocr_click_txts(page, ["领取奖励"])
+    await utils.sleep(page, 2)
+    await push.screen_shot_and_push(page, account, "丽都成募奖励")

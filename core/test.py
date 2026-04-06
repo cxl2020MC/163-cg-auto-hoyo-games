@@ -6,7 +6,7 @@ from .log import logger as log
 from . import main as core_main
 
 
-async def test(page: Page, account: config._Account):
+async def test(page: Page, account: config._GameAccount):
     await zzz_main.goto_game_home(page, account)
     while True:
         await broswer.screen_shot(page)

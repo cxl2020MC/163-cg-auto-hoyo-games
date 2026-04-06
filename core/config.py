@@ -5,14 +5,20 @@ from .log import logger as log
 
 
 class GameEnum(StrEnum):
-    jql_gjf = "jql_gjf"
     jql = "jql"
+    hsr = "hsr"
 
-class _Account(BaseModel):
-    username: str
-    password: str
-    id: str | None = None
-    game: GameEnum = GameEnum.jql_gjf
+
+class GameServerEnum(StrEnum):
+    cn = "cn"
+    os = "os"
+    bilibili = "bilibili"
+
+
+class _GameAccount(BaseModel):
+    id: str
+    game: GameEnum = GameEnum.jql
+    server: GameServerEnum = GameServerEnum.cn
     group_id: int | None = None
 
 
@@ -21,7 +27,7 @@ class _Config(BaseModel):
     data_dir: str = './data'
     push_token: str = ''
     push_url: str = ''
-    accounts: list[_Account]
+    game_accounts: list[_GameAccount]
 
 
 with open("./data/config.json", 'r', encoding='utf-8') as f:
@@ -30,6 +36,7 @@ with open("./data/config.json", 'r', encoding='utf-8') as f:
 
 
 CHANGE_IMG_DIR = Path(config.image_change_dir)
+
 
 def get_img_file_path(file_name):
     return Path(CHANGE_IMG_DIR, file_name)

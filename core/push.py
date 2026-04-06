@@ -58,7 +58,7 @@ async def wait_all_messages_push():
     log.info(f"消息队列发送完成，当前队列长度: {len(message_push_tasks)}")
 
 
-async def screen_shot_and_push(page: Page, account: config._Account, content: str):
+async def screen_shot_and_push(page: Page, account: config._GameAccount, content: str):
     log.info("进行消息推送")
     screen_shot = await broswer.screen_shot(page)
     title = f"{account.id} - 游戏脚本截图"
@@ -68,7 +68,7 @@ async def screen_shot_and_push(page: Page, account: config._Account, content: st
     content = f"{content}\n{img_cqcode}\n{time_str}"
     await add_message(account.group_id, title, content)
 
-async def push_video(account: config._Account, content: str, video_path: Path):
+async def push_video(account: config._GameAccount, content: str, video_path: Path):
     log.info("进行视频消息推送")
     title = f"{account.id} - 游戏脚本视频"
     video_base64 = ""
