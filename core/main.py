@@ -5,6 +5,7 @@ from .game.hsr import main as hsr_main
 
 from .log import logger as log
 from collections.abc import Callable, Awaitable
+import traceback
 
 
 async def main():
@@ -18,8 +19,12 @@ async def main():
             run_main_func = hsr_main.main
         else:
             raise Exception(f"未找到游戏 {game_account.game} 的主函数")
-
-        await playwright_run(game_account.id, game_account, run_main_func)
+        
+        try:
+            await playwright_run(game_account.id, game_account, run_main_func)
+        except:
+            log.error(
+                f"账号id为 {game_account.id} 的账号运行发生错误，错误信息: {traceback.format_exc()}")
 
 
 async def playwright_run(id, account: config._GameAccount, main_func: Callable[[Page, config._GameAccount], Awaitable[None]]):
@@ -34,7 +39,6 @@ async def playwright_run(id, account: config._GameAccount, main_func: Callable[[
             page = browser.pages[0]
             log.info(f"使用已打开的页面，当前页面数量: {len(browser.pages)}")
 
-
         if page.video:
             log.info(f"视频录制路径: {await page.video.path()}")
             pagevideo_path = await page.video.path()
@@ -46,9 +50,10 @@ async def playwright_run(id, account: config._GameAccount, main_func: Callable[[
         if len(browser.pages) > 1:
             await close_other_pages(browser, page)
         await main_func(page, account)
-    if pagevideo_path:  
+    if pagevideo_path:
         await push.push_video(account, "游戏脚本视频消息", pagevideo_path)
     await push.wait_all_messages_push()
+
 
 async def close_other_pages(browser: BrowserContext, current_page: Page):
     log.info(f"关闭多余的页面，当前页面数量: {len(browser.pages)}")

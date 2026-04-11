@@ -63,7 +63,8 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
     await utils.click_cv_template(page, "./core/template/firework.png")
     await utils.sleep(page, 2)
     await push.screen_shot_and_push(page, account, "烟花任务完成")
-    # await zzz_utils.click_confirm(page)
+    await zzz_utils.click_confirm(page)
+    await close_kjsc(page)
     await goto_game_home(page, account)
     await ndcm_reward(page, account)
 
@@ -83,7 +84,7 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ga
                 await zzz_utils.wait_for_teleport(page)
                 await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
-                await utils.try_ocr_click_txts(page, ["一杯汀曼特调"])
+                await utils.ocr_click_txts_retry(page, ["一杯汀曼特调"])
                 await utils.sleep(page, 2)
                 await push.screen_shot_and_push(page, account, "咖啡任务完成")
                 await zzz_utils.click_confirm(page)
@@ -128,30 +129,18 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ga
                 # 点击交互按钮
                 await zzz_utils.click_interaction(page)
                 await utils.sleep(page, 3)
-                await utils.try_ocr_click_txts(page, ["查看经营状况"])
+                await utils.ocr_click_txts_retry(page, ["查看经营状况"])
                 await utils.sleep(page, 3)
                 await push.screen_shot_and_push(page, account, "开始录像店任务")
-                for _ in range(5):
-                    await broswer.screen_shot(page)
-                    if await utils.click_cv_template(page, "./core/template/tc2.png"):
-                        break
-                    await utils.sleep(page, 1)
+                await utils.click_cv_template_retry(page, "./core/template/tc2.png")
                 await utils.sleep(page, 1)
-                for _ in range(5):
-                    await broswer.screen_shot(page)
-                    if await utils.click_cv_template(page, "./core/template/xzxcy.png"):
-                        break
-                    await utils.sleep(page, 1)
+                await utils.click_cv_template_retry(page, "./core/template/xzxcy.png")
                 await zzz_utils.click_confirm(page)
-                for _ in range(10):
-                    await broswer.screen_shot(page)
-                    if await utils.click_cv_template(page, "./core/template/xzxclxd.png"):
-                        break
-                    await utils.sleep(page, 1)
+                await utils.click_cv_template_retry(page, "./core/template/xzxclxd.png")
                 await utils.sleep(page, 1)
-                await utils.try_ocr_click_txts(page, ["推荐上架"])
+                await utils.ocr_click_txts_retry(page, ["推荐上架"])
                 await utils.sleep(page, 1)
-                await utils.try_ocr_click_txts(page, ["开始营业"])
+                await utils.ocr_click_txts_retry(page, ["开始营业"])
                 await utils.sleep(page, 1)
                 await zzz_utils.click_confirm(page)
                 await utils.sleep(page, 1)
@@ -180,8 +169,12 @@ async def open_ndcm(page: Page):
 
 async def ndcm_reward(page: Page, account: config._GameAccount):
     await open_ndcm(page)
-    await utils.try_ocr_click_txts(page, ["成长任务"])
+    await utils.ocr_click_txts_retry(page, ["成长任务"])
     await utils.sleep(page, 2)
-    await utils.try_ocr_click_txts(page, ["全部领取"])
+    await utils.ocr_click_txts_retry(page, ["全部领取"])
     await utils.sleep(page, 2)
     await push.screen_shot_and_push(page, account, "丽都城募奖励")
+
+
+async def close_kjsc(page: Page):
+    return await utils.click_cv_template_retry(page, "./core/template/kjsc_tc.png")
