@@ -54,6 +54,14 @@ async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: 
     return result
 
 
+async def ocr_clicks_txts(page: Page, ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None):
+    results = await match_ocr_txts(ocr_output, match_txts, exact)
+    for result in results:
+        x, y = get_box_center(result.box)
+        await broswer.click_video(page, x, y)
+    return results
+
+
 async def ocr_click_txts_retry(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None, retry_times: int = 3, retry_interval: int = 1):
     for i in range(retry_times):
         ocr_output = await get_ocr(page, ocr_output)
@@ -61,7 +69,8 @@ async def ocr_click_txts_retry(page: Page, match_txts: list[str], ocr_output: ty
         if result is not None:
             return result
         ocr_output = None
-        log.info(f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
+        log.info(
+            f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
         await sleep(page, retry_interval)
     log.warning(f"尝试了 {retry_times} 次，仍未找到文本 {match_txts}")
     return None
@@ -75,11 +84,18 @@ def get_box_center(box: list):
     return (float(center_x), float(center_y))
 
 
-def get_cv_box_center(cv_result: types.CV_Result, threshold: float = 0.75):
-    if cv_result.score > threshold:
-        x = cv_result.x + cv_result.width / 2
-        y = cv_result.y + cv_result.height / 2
-        return (x, y)
+def get_cv_box_center(cv_result: types.CV_Result):
+    x = cv_result.x + cv_result.width / 2
+    y = cv_result.y + cv_result.height / 2
+    return (x, y)
+
+
+async def match_screenshot_cv_template(template_path: str, threshold: float = 0.75):
+    cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), template_path)
+    if cv_result.score >= threshold:
+        log.info(f"在 截图 找到模板 {template_path}")
+        return cv_result
+    return None
 
 
 def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, float]) -> types.OCR_Results:
@@ -95,23 +111,27 @@ def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, 
 
 
 async def click_cv_template(page: Page, template_path: str, threshold: float = 0.75):
-    cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), template_path)
-    match_res = get_cv_box_center(cv_result, threshold)
-    if match_res:
-        log.info(f"在 {match_res} 找到模板 {template_path}")
+    # cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), template_path)
+    cv_result = await match_screenshot_cv_template(template_path, threshold)
+    if cv_result:
+        match_res = get_cv_box_center(cv_result)
+        log.info(f"模板 {template_path} 中心在 {match_res}")
         x, y = match_res
         await broswer.click_video(page, x, y)
         return True
+
 
 async def click_cv_template_retry(page: Page, template_path: str, threshold: float = 0.75, retry_times: int = 5, retry_interval: int = 1):
     for i in range(retry_times):
         await broswer.screen_shot(page)
         if await click_cv_template(page, template_path, threshold):
             return True
-        log.info(f"未找到模板 {template_path}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
+        log.info(
+            f"未找到模板 {template_path}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
         await sleep(page, retry_interval)
     log.warning(f"尝试了 {retry_times} 次，仍未找到模板 {template_path}")
     return False
+
 
 async def drag(page: Page, start: tuple[float, float], end: tuple[float, float], steps: int = 20):
     log.info(f"从 {start} 拖动到 {end}")

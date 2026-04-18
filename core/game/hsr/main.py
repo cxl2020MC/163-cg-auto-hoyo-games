@@ -23,9 +23,14 @@ async def goto_game_home(page: Page, account: config._GameAccount):
         if await utils.ocr_click_txts(page, ocr_output, ["列车补给"]):
             log.info("领取月卡奖励")
             await push.screen_shot_and_push(page, account, "月卡奖励")
-        if await utils.match_ocr_txt(ocr_output, ["状态效果"]):
-            log.info("找到状态效果")
-            return
+        
+        # if await utils.match_ocr_txt(ocr_output, ["状态效果"]):
+        #     log.info("找到状态效果")
+        #     return True
+        
+        if await utils.match_screenshot_cv_template("./core/template/hsr/phone.png"):
+            log.info("找到手机图标")
+            return True
 
         await utils.sleep(page, 1)
     raise Exception("没有找到状态效果")
@@ -48,17 +53,21 @@ async def open_phone(page: Page):
 
 async def open_entrust(page: Page):
     await open_phone(page)
-    ocr_output = await utils.get_ocr(page)
-    await utils.ocr_click_txts(page, ocr_output, ["委托"])
+    await utils.ocr_click_txts_retry(page, ["委托"])
+
+async def open_quick_book(page: Page):
+    await open_phone(page)
+    await utils.ocr_click_txts_retry(page, ["指南"])
+
+async def toggle_quick_book_to_scsy_page(page: Page, ):
+    return await utils.click_cv_template_retry(page, "./core/template/hsr/kjsc_scsy.png")
+
 
 
 async def quick_book_daily_task(page: Page, account: config._GameAccount):
     await daily_entrust(page, account)
-    # await open_quick_book(page)
-    # await utils.click_cv_template(page, "./core/template/firework.png")
-    # await utils.sleep(page, 2)
-    # await push.screen_shot_and_push(page, account, "烟花任务完成")
-    # await utils.sleep(page, 5)
+    await start_character_development(page, account)
+
 
 
 async def daily_entrust(page: Page, account: config._GameAccount):
@@ -66,15 +75,61 @@ async def daily_entrust(page: Page, account: config._GameAccount):
     for i in range(5):
         ocr_output = await utils.get_ocr(page)
         log.debug(f"第{i+1}次检查领取奖励")
-        if await utils.ocr_click_txts(page, ocr_output, ["领取奖励"]):
+        if await utils.ocr_click_txts(page, ocr_output, ["领取奖励"], exact=True):
             await utils.sleep(page, 2)
             await push.screen_shot_and_push(page, account, "今日委托")
+            await confirm_to_receive_reward(page)
+            await close(page)
+            return True
 
 
 async def confirm_to_receive_reward(page: Page):
-    for i in range(5):
+    await utils.ocr_click_txts_retry(page, ["点击空白处关闭"])
+
+
+async def start_character_development(page: Page, account: config._GameAccount):
+    await open_quick_book(page)
+    await toggle_quick_book_to_scsy_page(page)
+
+    await utils.ocr_click_txts_retry(page, ["进入"])
+    await utils.sleep(page, 2)
+    await auto_attack(page, account)
+
+async def close(page: Page):
+    await utils.click_cv_template_retry(page, "./core/template/hsr/close.png")
+
+
+async def auto_attack(page: Page, account: config._GameAccount):
+    for i in range(8):
+        await utils.ocr_click_txts_retry(page, ["+"], exact=True)
+        log.info(f"第{i+1}次点击增加次数按钮")
+    await utils.ocr_click_txts_retry(page, ["挑战"], exact=True)
+    await utils.sleep(page, 2)
+    await utils.ocr_click_txts_retry(page, ["开始挑战"], exact=True)
+    await utils.sleep(page, 2)
+    for i in range(300):
         ocr_output = await utils.get_ocr(page)
-        log.debug(f"第{i+1}次检查确认领取奖励")
-        if await utils.ocr_click_txts(page, ocr_output, ["点击空白处关闭"]):
+        if await utils.match_ocr_txt(ocr_output, ["单攻", "群攻"]):
+            log.info("自动战斗可能未开启，尝试开启自动战斗")
+            await utils.click_cv_template_retry(page, "./core/template/hsr/open_auto_attack.png")
+        if await utils.match_ocr_txt(ocr_output, ["挑战失败", "挑战成功"]):
+            log.info("挑战已结束")
+            await push.screen_shot_and_push(page, account, "挑战结果")
+            await utils.ocr_click_txts_retry(page, ["退出关卡"])
+            await close(page)
             return True
         await utils.sleep(page, 1)
+
+
+async def reward_daily_task(page: Page, account: config._GameAccount):
+    await open_quick_book(page)
+    for i in range(5):
+        ocr_output = await utils.get_ocr(page)
+        log.debug(f"第{i+1}次检查领取每日奖励")
+        if await utils.ocr_click_txts(page, ocr_output, ["领取"], exact=True):
+            log.info("找到每日奖励")
+            break
+        await utils.sleep(page, 1)
+    await utils.sleep(page, 1)
+
+    await push.screen_shot_and_push(page, account, "领取每日奖励")

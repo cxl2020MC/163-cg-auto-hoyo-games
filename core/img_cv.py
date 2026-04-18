@@ -31,12 +31,14 @@ async def match_template(img_path: str, template_path: str, mask_path: str | Non
     return result
 
 
-async def mach_template2(img_path: str, template_path: str):
+async def mach_template2(img_path: str, template_path: str, mask_path: str | None = None):
     img = await asyncio.to_thread(cv2.imread, img_path, cv2.IMREAD_COLOR_BGR)
     template_img = await asyncio.to_thread(cv2.imread, template_path, cv2.IMREAD_COLOR_BGR)
+    mask_img = await asyncio.to_thread(cv2.imread, mask_path, cv2.IMREAD_GRAYSCALE) if mask_path else None
+
     assert img is not None
     assert template_img is not None
-    res = cv2.matchTemplate(img, template_img, cv2.TM_CCOEFF_NORMED)
+    res = cv2.matchTemplate(img, template_img, cv2.TM_CCOEFF_NORMED, mask=mask_img)
     threshold = 0.8
     loc = np.where(res >= threshold)
     for pt in zip(*loc[::-1]):

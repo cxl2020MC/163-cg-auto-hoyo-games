@@ -118,7 +118,7 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ga
                 await zzz_utils.click_confirm(page)
                 await goto_game_home(page, account)
         case 2:
-            operate_box = await utils.match_ocr_txt(ocr_output, ["录像店"])
+            operate_box = await utils.match_ocr_txt(ocr_output, ["录像店经营"])
             if operate_box:
                 box = operate_box.box
                 res = utils.get_ocr_box_in_range_x(

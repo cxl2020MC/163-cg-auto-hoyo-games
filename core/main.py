@@ -19,10 +19,10 @@ async def main():
             run_main_func = hsr_main.main
         else:
             raise Exception(f"未找到游戏 {game_account.game} 的主函数")
-        
+
         try:
             await playwright_run(game_account.id, game_account, run_main_func)
-        except:
+        except Exception as e:
             log.error(
                 f"账号id为 {game_account.id} 的账号运行发生错误，错误信息: {traceback.format_exc()}")
 

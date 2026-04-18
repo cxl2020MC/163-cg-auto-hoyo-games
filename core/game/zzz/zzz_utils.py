@@ -42,10 +42,9 @@ async def check_game_status(page: Page, ocr_result: types.OCR_Results):
 # 返回街区
 async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
 
-    cv_result = await img_cv.match_template(str(config.SCREENSHOT_PATH), "./core/template/tc.png")
-
-    cv_box_center = utils.get_cv_box_center(cv_result, 0.65)
-    if cv_box_center:
+    cv_reslt = await utils.match_screenshot_cv_template("./core/template/tc.png", 0.65)
+    if cv_reslt:
+        cv_box_center = utils.get_cv_box_center(cv_reslt)
         log.info(f"在 {cv_box_center} 找到退出按钮")
         x, y = cv_box_center
         await broswer.click_video(page, x, y)
