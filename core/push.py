@@ -1,15 +1,15 @@
-import aiohttp
 import asyncio
 import base64
 import traceback
-import anyio
 from datetime import datetime
 from pathlib import Path
-from . import config
-from . import broswer
-from .log import logger as log
+
+import aiohttp
+import anyio
 from playwright.async_api import Page
 
+from . import broswer, config
+from .log import logger as log
 
 message_push_tasks = []
 

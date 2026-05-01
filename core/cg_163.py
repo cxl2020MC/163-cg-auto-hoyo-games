@@ -1,6 +1,8 @@
-from .log import logger as log
-from playwright.async_api import Page, expect
 import asyncio
+
+from playwright.async_api import Page, expect
+
+from .log import logger as log
 
 
 async def check_login(page: Page):

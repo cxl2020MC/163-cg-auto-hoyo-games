@@ -1,9 +1,6 @@
 from playwright.async_api import Page
 
-from . import broswer
-
-
-from . import config, types, img_cv, ocr
+from . import broswer, config, img_cv, ocr, types
 from .log import logger as log
 
 
@@ -118,19 +115,20 @@ async def click_cv_template(page: Page, template_path: str, threshold: float = 0
         log.info(f"模板 {template_path} 中心在 {match_res}")
         x, y = match_res
         await broswer.click_video(page, x, y)
-        return True
+        return (x, y)
 
 
 async def click_cv_template_retry(page: Page, template_path: str, threshold: float = 0.75, retry_times: int = 5, retry_interval: int = 1):
     for i in range(retry_times):
         await broswer.screen_shot(page)
-        if await click_cv_template(page, template_path, threshold):
-            return True
+        click_cv_result = await click_cv_template(page, template_path, threshold)
+        if click_cv_result:
+            return click_cv_result
         log.info(
             f"未找到模板 {template_path}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
         await sleep(page, retry_interval)
     log.warning(f"尝试了 {retry_times} 次，仍未找到模板 {template_path}")
-    return False
+    return None
 
 
 async def drag(page: Page, start: tuple[float, float], end: tuple[float, float], steps: int = 20):

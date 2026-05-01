@@ -1,5 +1,5 @@
-from . import main as core_main
 from . import config
+from . import main as core_main
 from .game.zzz import main as zzz_main
 from .log import logger as log
 

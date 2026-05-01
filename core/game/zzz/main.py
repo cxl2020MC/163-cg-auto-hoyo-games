@@ -1,14 +1,8 @@
 from playwright.async_api import Page
 
-from . import zzz_utils
-
-from ... import broswer
-from ... import ocr
-from ... import utils
-from ... import config
-from ... import push
-
+from ... import broswer, config, ocr, push, utils
 from ...log import logger as log
+from . import zzz_utils
 
 
 async def main(page: Page, account: config._GameAccount):
@@ -35,13 +29,15 @@ async def goto_game_home(page: Page, account: config._GameAccount):
 
         await utils.sleep(page, 1)
     log.error("没有找到星期")
-    raise Exception("没有找到星期")
+    raise Exception("没有找到星期，进入游戏超时")
 
 
 async def open_quick_book(page: Page):
     for _ in range(15):
         ocr_output = await utils.get_ocr(page)
-        if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
+        # if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
+        if len(await utils.match_ocr_txts(ocr_output, ["日常", "目标", "训练"], exact=True)) >= 2:
+        
             log.info("当前正在快捷手册页面")
             if not await utils.match_ocr_txt(ocr_output, ["活跃度"]):
                 await utils.ocr_click_txts(page, ocr_output, ["日常"])
@@ -59,98 +55,118 @@ async def open_quick_book(page: Page):
 async def quick_book_daily_task(page: Page, account: config._GameAccount):
     for index in range(3):
         await quick_book_daily_task_main(page, index, account)
+    
     await open_quick_book(page)
-    await utils.click_cv_template(page, "./core/template/firework.png")
+    # await utils.click_cv_template_retry(page, "./core/template/firework.png", threshold=0.65)
+    # await utils.click_cv_template_retry(page, "./core/template/firework2.png")
+    await utils.ocr_click_txts_retry(page, ["今日最大活跃度"], exact=True)
+
     await utils.sleep(page, 2)
     await push.screen_shot_and_push(page, account, "烟花任务完成")
     await zzz_utils.click_confirm(page)
     await close_kjsc(page)
+    await utils.sleep(page, 1)
     await goto_game_home(page, account)
     await ndcm_reward(page, account)
 
 
 async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
-    await open_quick_book(page)
-    ocr_output = await utils.get_ocr(page)
     match index:
         case 0:
-            cofee_box = await utils.match_ocr_txt(ocr_output, ["咖啡"])
-            if cofee_box:
-                box = cofee_box.box
-                res = utils.get_ocr_box_in_range_x(
-                    ocr_output, (box[0][0], box[1][0]))
-                await utils.ocr_click_txts(page, res, ["前往"])
-                await zzz_utils.agree_teleport(page)
-                await zzz_utils.wait_for_teleport(page)
-                await zzz_utils.click_interaction(page)
-                await utils.sleep(page, 3)
-                await utils.ocr_click_txts_retry(page, ["一杯汀曼特调"])
-                await utils.sleep(page, 2)
-                await push.screen_shot_and_push(page, account, "咖啡任务完成")
-                await zzz_utils.click_confirm(page)
+            await quick_book_daily_task_coffee(page, account)
         case 1:
-            divine_box = await utils.match_ocr_txt(ocr_output, ["占卜"])
-            if divine_box:
-                box = divine_box.box
-                res = utils.get_ocr_box_in_range_x(
-                    ocr_output, (box[0][0], box[1][0]))
-                await utils.ocr_click_txts(page, res, ["前往"])
-                await zzz_utils.agree_teleport(page)
-                await zzz_utils.wait_for_teleport(page)
-                await zzz_utils.click_interaction(page)
-                await utils.sleep(page, 3)
-                for _ in range(10):
-                    ocr_output = await utils.get_ocr(page)
-                    if await utils.ocr_click_txts(page, ocr_output, ["开", "開"]):
-                        break
-                await utils.sleep(page, 2)
-                for _ in range(10):
-                    ocr_output = await utils.get_ocr(page)
-                    if await utils.match_ocr_txt(ocr_output, ["滑动屏幕"]):
-                        page_size = await utils.get_page_size(page)
-                        if page_size:
-                            await utils.drag(page, (page_size[0]*0.1, page_size[1]/2), (page_size[0]*0.9, page_size[1]/2))
-                    else:
-                        break
-                await zzz_utils.click_confirm(page)
-                await utils.sleep(page, 2)
-                await push.screen_shot_and_push(page, account, "占卜任务完成")
-                await zzz_utils.click_confirm(page)
-                await goto_game_home(page, account)
+            await quick_book_daily_task_divine(page, account)
         case 2:
-            operate_box = await utils.match_ocr_txt(ocr_output, ["录像店经营"])
-            if operate_box:
-                box = operate_box.box
-                res = utils.get_ocr_box_in_range_x(
-                    ocr_output, (box[0][0], box[1][0]))
-                await utils.ocr_click_txts(page, res, ["前往"])
-                await zzz_utils.agree_teleport(page)
-                await zzz_utils.wait_for_teleport(page)
-                # 点击交互按钮
-                await zzz_utils.click_interaction(page)
-                await utils.sleep(page, 3)
-                await utils.ocr_click_txts_retry(page, ["查看经营状况"])
-                await utils.sleep(page, 3)
-                await push.screen_shot_and_push(page, account, "开始录像店任务")
-                await utils.click_cv_template_retry(page, "./core/template/tc2.png")
-                await utils.sleep(page, 1)
-                await utils.click_cv_template_retry(page, "./core/template/xzxcy.png")
-                await zzz_utils.click_confirm(page)
-                await utils.click_cv_template_retry(page, "./core/template/xzxclxd.png")
-                await utils.sleep(page, 1)
-                await utils.ocr_click_txts_retry(page, ["推荐上架"])
-                await utils.sleep(page, 1)
-                await utils.ocr_click_txts_retry(page, ["开始营业"])
-                await utils.sleep(page, 1)
-                await zzz_utils.click_confirm(page)
-                await utils.sleep(page, 1)
-                await push.screen_shot_and_push(page, account, "录像店任务完成")
-                await zzz_utils.click_confirm(page)
-                await goto_game_home(page, account)
-
+            await quick_book_daily_task_operate(page, account)
         case _:
             log.error("无法识别的任务id")
             raise Exception("无法识别的任务id")
+
+
+async def quick_book_daily_task_coffee(page: Page, account: config._GameAccount):
+    await open_quick_book(page)
+    ocr_output = await utils.get_ocr(page)
+    cofee_box = await utils.match_ocr_txt(ocr_output, ["次咖啡"])
+    if cofee_box:
+        box = cofee_box.box
+        res = utils.get_ocr_box_in_range_x(
+            ocr_output, (box[0][0], box[1][0]))
+        await utils.ocr_click_txts(page, res, ["前往"])
+        await zzz_utils.agree_teleport(page)
+        await zzz_utils.wait_for_teleport(page)
+        await zzz_utils.click_interaction(page)
+        await utils.sleep(page, 3)
+        await utils.ocr_click_txts_retry(page, ["一杯汀曼特调"])
+        await utils.sleep(page, 2)
+        await push.screen_shot_and_push(page, account, "咖啡任务完成")
+        await zzz_utils.click_confirm(page)
+
+
+async def quick_book_daily_task_divine(page: Page, account: config._GameAccount):
+    await open_quick_book(page)
+    ocr_output = await utils.get_ocr(page)
+    divine_box = await utils.match_ocr_txt(ocr_output, ["次占卜"])
+    if divine_box:
+        box = divine_box.box
+        res = utils.get_ocr_box_in_range_x(
+            ocr_output, (box[0][0], box[1][0]))
+        await utils.ocr_click_txts(page, res, ["前往"])
+        await zzz_utils.agree_teleport(page)
+        await zzz_utils.wait_for_teleport(page)
+        await zzz_utils.click_interaction(page)
+        await utils.sleep(page, 3)
+        for _ in range(10):
+            ocr_output = await utils.get_ocr(page)
+            if await utils.ocr_click_txts(page, ocr_output, ["开", "開"]):
+                break
+        await utils.sleep(page, 2)
+        for _ in range(10):
+            ocr_output = await utils.get_ocr(page)
+            if await utils.match_ocr_txt(ocr_output, ["滑动屏幕"]):
+                page_size = await utils.get_page_size(page)
+                if page_size:
+                    await utils.drag(page, (page_size[0]*0.1, page_size[1]/2), (page_size[0]*0.9, page_size[1]/2))
+            else:
+                break
+        await zzz_utils.click_confirm(page)
+        await utils.sleep(page, 2)
+        await push.screen_shot_and_push(page, account, "占卜任务完成")
+        await zzz_utils.click_confirm(page)
+        await goto_game_home(page, account)
+
+
+async def quick_book_daily_task_operate(page: Page, account: config._GameAccount):
+    await open_quick_book(page)
+    ocr_output = await utils.get_ocr(page)
+    operate_box = await utils.match_ocr_txt(ocr_output, ["今日录像店经营"])
+    if operate_box:
+        box = operate_box.box
+        res = utils.get_ocr_box_in_range_x(
+            ocr_output, (box[0][0], box[1][0]))
+        await utils.ocr_click_txts(page, res, ["前往"])
+        await zzz_utils.agree_teleport(page)
+        await zzz_utils.wait_for_teleport(page)
+        # 点击交互按钮
+        await zzz_utils.click_interaction(page)
+        await utils.sleep(page, 3)
+        await utils.ocr_click_txts_retry(page, ["查看经营状况"])
+        await utils.sleep(page, 3)
+        await push.screen_shot_and_push(page, account, "开始录像店任务")
+        await utils.click_cv_template_retry(page, "./core/template/tc2.png")
+        await utils.sleep(page, 1)
+        await utils.click_cv_template_retry(page, "./core/template/xzxcy.png")
+        await zzz_utils.click_confirm(page)
+        await utils.click_cv_template_retry(page, "./core/template/xzxclxd.png")
+        await utils.sleep(page, 1)
+        await utils.ocr_click_txts_retry(page, ["推荐上架"])
+        await utils.sleep(page, 1)
+        await utils.ocr_click_txts_retry(page, ["开始营业"])
+        await utils.sleep(page, 1)
+        await zzz_utils.click_confirm(page)
+        await utils.sleep(page, 1)
+        await push.screen_shot_and_push(page, account, "录像店任务完成")
+        await zzz_utils.click_confirm(page)
+        await goto_game_home(page, account)
 
 
 async def open_ndcm(page: Page):
@@ -162,7 +178,7 @@ async def open_ndcm(page: Page):
                 return True
         else:
             log.info("当前不是丽都城募页面")
-            await utils.click_cv_template(page, "./core/template/ndcm.png", threshold=0.7)
+            await utils.click_cv_template(page, "./core/template/ndcm.png")
         await utils.sleep(page, 1)
     return False
 

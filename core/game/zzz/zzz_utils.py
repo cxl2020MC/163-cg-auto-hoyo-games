@@ -1,15 +1,9 @@
+from enum import StrEnum
+
 from playwright.async_api import Page
 
-from ... import broswer
-from ... import ocr
-from ... import types
-from ... import utils
-from ... import config
-from ... import img_cv
-
+from ... import broswer, config, img_cv, ocr, types, utils
 from ...log import logger as log
-
-from enum import StrEnum
 
 
 class Game_Status(StrEnum):

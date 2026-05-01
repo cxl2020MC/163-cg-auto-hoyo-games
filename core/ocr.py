@@ -1,10 +1,10 @@
-from rapidocr import RapidOCR
-from rapidocr.main import RapidOCROutput
 import asyncio
 
-from . import types, config
-from .log import logger as log
+from rapidocr import RapidOCR
+from rapidocr.main import RapidOCROutput
 
+from . import config, types
+from .log import logger as log
 
 engine = RapidOCR()
 

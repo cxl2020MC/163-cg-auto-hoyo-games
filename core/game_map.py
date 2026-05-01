@@ -1,6 +1,8 @@
+from enum import StrEnum
+
 from . import config
 from .log import logger as log
-from enum import StrEnum
+
 
 class GameIdEnum(StrEnum):
     JQL_GJF = "jql_gjf"

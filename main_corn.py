@@ -1,9 +1,11 @@
-from core import main
-from core.log import logger as log
 import asyncio
-import schedule
 import time
 import traceback
+
+import schedule
+
+from core import main
+from core.log import logger as log
 
 
 def run(interval=1):

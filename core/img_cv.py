@@ -1,5 +1,6 @@
-import cv2
 import asyncio
+
+import cv2
 import numpy as np
 
 from . import types
@@ -38,7 +39,8 @@ async def mach_template2(img_path: str, template_path: str, mask_path: str | Non
 
     assert img is not None
     assert template_img is not None
-    res = cv2.matchTemplate(img, template_img, cv2.TM_CCOEFF_NORMED, mask=mask_img)
+    res = cv2.matchTemplate(
+        img, template_img, cv2.TM_CCOEFF_NORMED, mask=mask_img)
     threshold = 0.8
     loc = np.where(res >= threshold)
     for pt in zip(*loc[::-1]):
@@ -61,11 +63,11 @@ async def generate_mask_image(img_path: str, output_path: str):
 
 if __name__ == '__main__':
     img_path = r"img\screenshot.png"
-    template_path = r"core\template\hsr\phone.png"
+    template_path = r"core\template\tc4.png"
     mask_path = r"core\template\tc_mask.png"
     # img = cv2.imread(img_path, cv2.IMREAD_COLOR_BGR)
     # template_img = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
-    asyncio.run(generate_mask_image(template_path, mask_path))
+    # asyncio.run(generate_mask_image(template_path, mask_path))
     res = asyncio.run(match_template(img_path, template_path, mask_path))
     print(res)
     # threshold = 0.8

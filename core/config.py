@@ -1,7 +1,9 @@
-from pydantic import BaseModel
+import tomllib
 from enum import StrEnum
 from pathlib import Path
-import tomllib
+
+from pydantic import BaseModel
+
 from .log import logger as log
 
 

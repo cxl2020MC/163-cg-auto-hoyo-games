@@ -1,14 +1,11 @@
 from playwright.async_api import Page
 
+from ... import broswer, config, ocr, push, utils
+from ...log import logger as log
+
 # from . import zzz_utils
 
-from ... import broswer
-from ... import ocr
-from ... import utils
-from ... import config
-from ... import push
 
-from ...log import logger as log
 
 
 async def main(page: Page, account: config._GameAccount):
@@ -33,7 +30,7 @@ async def goto_game_home(page: Page, account: config._GameAccount):
             return True
 
         await utils.sleep(page, 1)
-    raise Exception("没有找到状态效果")
+    raise Exception("进入游戏超时")
 
 
 async def open_phone(page: Page):
@@ -52,12 +49,14 @@ async def open_phone(page: Page):
 
 
 async def open_entrust(page: Page):
-    await open_phone(page)
-    await utils.ocr_click_txts_retry(page, ["委托"])
+    await open_quick_book(page)
+    await switch_quick_book_task(page, "派遣委托")
 
 async def open_quick_book(page: Page):
-    await open_phone(page)
-    await utils.ocr_click_txts_retry(page, ["指南"])
+    ocr_result = await utils.get_ocr(page)
+    if not await utils.match_ocr_txt(ocr_result, ["星际和平指南"], exact=True):
+        await open_phone(page)
+        await utils.ocr_click_txts_retry(page, ["指南"])
 
 async def toggle_quick_book_to_scsy_page(page: Page, ):
     return await utils.click_cv_template_retry(page, "./core/template/hsr/kjsc_scsy.png")
@@ -100,8 +99,16 @@ async def close(page: Page):
 
 
 async def auto_attack(page: Page, account: config._GameAccount):
-    for i in range(8):
-        await utils.ocr_click_txts_retry(page, ["+"], exact=True)
+    add_btn_pos = await utils.click_cv_template_retry(page, "./core/template/hsr/add_number.png")
+    if not add_btn_pos:
+        # log.error("没有找到增加次数按钮，无法进行自动战斗")
+        raise Exception("没有找到增加次数按钮，无法进行自动战斗")
+        # return False
+
+    for i in range(1, 8):
+        # await utils.ocr_click_txts_retry(page, ["+"], exact=True)
+        await broswer.click_video(page, *add_btn_pos)
+
         log.info(f"第{i+1}次点击增加次数按钮")
     await utils.ocr_click_txts_retry(page, ["挑战"], exact=True)
     await utils.sleep(page, 2)
@@ -122,7 +129,7 @@ async def auto_attack(page: Page, account: config._GameAccount):
 
 
 async def reward_daily_task(page: Page, account: config._GameAccount):
-    await open_quick_book(page)
+    # await open_quick_book(page)
     for i in range(5):
         ocr_output = await utils.get_ocr(page)
         log.debug(f"第{i+1}次检查领取每日奖励")
@@ -133,3 +140,15 @@ async def reward_daily_task(page: Page, account: config._GameAccount):
     await utils.sleep(page, 1)
 
     await push.screen_shot_and_push(page, account, "领取每日奖励")
+
+
+async def switch_quick_book_task(page: Page, task_name: str):
+    ocr_output = await utils.get_ocr(page)
+    task_box = await utils.match_ocr_txt(ocr_output, [task_name])
+    if task_box:
+        box = task_box.box
+        res = utils.get_ocr_box_in_range_x(
+            ocr_output, (box[0][0], box[1][0]))
+        await utils.ocr_click_txts(page, res, ["前往"])
+    
+

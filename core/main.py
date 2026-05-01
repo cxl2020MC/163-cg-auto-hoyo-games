@@ -1,11 +1,12 @@
-from playwright.async_api import async_playwright, Page, BrowserContext
-from . import cg_163, config, push, game_map
-from .game.zzz import main as zzz_main
-from .game.hsr import main as hsr_main
-
-from .log import logger as log
-from collections.abc import Callable, Awaitable
 import traceback
+from collections.abc import Awaitable, Callable
+
+from playwright.async_api import BrowserContext, Page, async_playwright
+
+from . import cg_163, config, game_map, push
+from .game.hsr import main as hsr_main
+from .game.zzz import main as zzz_main
+from .log import logger as log
 
 
 async def main():

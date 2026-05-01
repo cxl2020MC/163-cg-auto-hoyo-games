@@ -15,3 +15,8 @@ dependencies = [
     "rapidocr>=3.4.5",
     "schedule",
 ]
+
+[dependency-groups]
+dev = [
+    "isort>=8.0.1",
+]
