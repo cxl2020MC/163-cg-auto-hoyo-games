@@ -37,11 +37,12 @@ async def open_quick_book(page: Page):
         ocr_output = await utils.get_ocr(page)
         # if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
         if len(await utils.match_ocr_txts(ocr_output, ["日常", "目标", "训练"], exact=True)) >= 2:
-        
+
             log.info("当前正在快捷手册页面")
             if not await utils.match_ocr_txt(ocr_output, ["活跃度"]):
                 await utils.ocr_click_txts(page, ocr_output, ["日常"])
-                await utils.sleep(page, 2)
+                await utils.sleep(page, 1)
+                await broswer.screen_shot(page)
             return True
         else:
             log.info("当前不是快捷手册页面")
@@ -55,7 +56,7 @@ async def open_quick_book(page: Page):
 async def quick_book_daily_task(page: Page, account: config._GameAccount):
     for index in range(3):
         await quick_book_daily_task_main(page, index, account)
-    
+
     await open_quick_book(page)
     # await utils.click_cv_template_retry(page, "./core/template/firework.png", threshold=0.65)
     # await utils.click_cv_template_retry(page, "./core/template/firework2.png")

@@ -53,8 +53,7 @@ async def agree_teleport(page: Page) -> bool:
         log.debug(f"第{i+1}次检查同意传送页面")
         if await utils.match_ocr_txt(ocr_output, ["传送"]):
             log.info("当前正在同意传送页面")
-            await click_confirm(page)
-            return True
+            return await click_confirm(page, ocr_output)
         await utils.sleep(page, 1)
     log.warning("没有找到同意传送页面")
     return False
@@ -72,12 +71,14 @@ async def wait_for_teleport(page: Page) -> bool:
 
 
 # 点击弹窗确认按钮
-async def click_confirm(page: Page):
+async def click_confirm(page: Page, ocr_output: types.OCR_Results | None = None) -> bool:
     for i in range(5):
-        ocr_output = await utils.get_ocr(page)
+        ocr_output = await utils.get_ocr(page, ocr_output)
         log.debug(f"第{i+1}次检查确认按钮")
         if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"], exact=True):
             return True
+        # 重置ocr_output
+        ocr_output = None
         await utils.sleep(page, 1)
     log.warning("没有找到确认按钮")
     return False
