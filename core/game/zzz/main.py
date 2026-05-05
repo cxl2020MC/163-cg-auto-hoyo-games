@@ -18,9 +18,15 @@ async def goto_game_home(page: Page, account: config._GameAccount):
         if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
             log.info("领取月卡奖励")
             await push.screen_shot_and_push(page, account, "月卡奖励")
-        if await utils.match_ocr_txt(ocr_output, ["网络请求错误"]):
+        elif await utils.match_ocr_txt(ocr_output, ["网络请求错误"]):
             log.warning("网络请求错误，尝试点击重试")
             await utils.ocr_click_txts(page, ocr_output, ["重试"], exact=True)
+        elif await utils.ocr_click_txts(page, ocr_output, ["用户协议和隐私政策"], exact=True):
+            log.info("尝试同意用户协议和隐私政策")
+            for _ in range(3):
+                await utils.click_cv_template_retry(page, "./core/template/agree_yhxy.png")
+                await utils.sleep(page, 1)
+            await utils.ocr_click_txts_retry(page, ["接受"], exact=True)
         if await utils.match_ocr_txt(ocr_output, ["星期"]):
             log.info("找到星期")
             return True
