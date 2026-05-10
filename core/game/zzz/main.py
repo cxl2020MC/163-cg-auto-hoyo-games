@@ -1,6 +1,6 @@
 from playwright.async_api import Page
 
-from ... import broswer, config, ocr, push, utils
+from ... import browser, config, ocr, push, utils
 from ...log import logger as log
 from . import zzz_utils
 
@@ -48,12 +48,12 @@ async def open_quick_book(page: Page):
             if not await utils.match_ocr_txt(ocr_output, ["活跃度"]):
                 await utils.ocr_click_txts(page, ocr_output, ["日常"])
                 await utils.sleep(page, 1)
-                await broswer.screen_shot(page)
+                await browser.screen_shot(page)
             return True
         else:
             log.info("当前不是快捷手册页面")
             # 刷新截图，防止二次点击，导致切换快捷手册页面
-            await broswer.screen_shot(page)
+            await browser.screen_shot(page)
             await utils.click_cv_template(page, "./core/template/kjsc.png")
         await utils.sleep(page, 1)
     return False
@@ -201,3 +201,14 @@ async def ndcm_reward(page: Page, account: config._GameAccount):
 
 async def close_kjsc(page: Page):
     return await utils.click_cv_template_retry(page, "./core/template/kjsc_tc.png")
+
+
+async def open_function(page: Page, function_name: str):
+    if await utils.click_cv_template_retry(page, "./core/template/kjgj.png"):
+        await utils.sleep(page, 1)
+        await utils.ocr_click_txts_retry(page, [function_name], exact=True)
+        await utils.sleep(page, 1)
+    #     return True
+    # else:
+    #     log.warning(f"没有找到 {function_name} 按钮")
+    #     return False

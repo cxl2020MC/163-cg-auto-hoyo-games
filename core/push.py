@@ -8,7 +8,7 @@ import aiohttp
 import anyio
 from playwright.async_api import Page
 
-from . import broswer, config
+from . import browser, config
 from .log import logger as log
 
 message_push_tasks = []
@@ -60,7 +60,7 @@ async def wait_all_messages_push():
 
 async def screen_shot_and_push(page: Page, account: config._GameAccount, content: str):
     log.info("进行消息推送")
-    screen_shot = await broswer.screen_shot(page)
+    screen_shot = await browser.screen_shot(page)
     title = f"{account.id} - 游戏脚本截图"
     img_base64 = base64.b64encode(screen_shot).decode("utf-8")
     img_cqcode = f"[CQ:image,file=base64://{img_base64}]"

@@ -2,7 +2,7 @@ from enum import StrEnum
 
 from playwright.async_api import Page
 
-from ... import broswer, config, img_cv, ocr, types, utils
+from ... import browser, config, img_cv, ocr, types, utils
 from ...log import logger as log
 
 
@@ -41,7 +41,7 @@ async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
         cv_box_center = utils.get_cv_box_center(cv_reslt)
         log.info(f"在 {cv_box_center} 找到退出按钮")
         x, y = cv_box_center
-        await broswer.click_video(page, x, y)
+        await browser.click_video(page, x, y)
 
     else:
         await utils.ocr_click_txts(page, ocr_result, ["X", "x"])
@@ -86,7 +86,7 @@ async def click_confirm(page: Page, ocr_output: types.OCR_Results | None = None)
 
 async def click_interaction(page: Page):
     for i in range(5):
-        await broswer.screen_shot(page)
+        await browser.screen_shot(page)
         log.debug(f"第{i+1}次检查交互按钮")
         if await utils.click_cv_template(page, "./core/template/jh.png"):
             return True

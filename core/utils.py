@@ -1,6 +1,6 @@
 from playwright.async_api import Page
 
-from . import broswer, config, img_cv, ocr, types
+from . import browser, config, img_cv, ocr, types
 from .log import logger as log
 
 
@@ -9,7 +9,7 @@ async def sleep(page: Page, seconds: int):
 
 
 async def screen_shot_and_ocr(page: Page) -> types.OCR_Results:
-    await broswer.screen_shot(page)
+    await browser.screen_shot(page)
     ocr_output = await ocr.ocr_image()
     return ocr_output
 
@@ -47,7 +47,7 @@ async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: 
     result = await match_ocr_txt(ocr_output, match_txts, exact)
     if result is not None:
         x, y = get_box_center(result.box)
-        await broswer.click_video(page, x, y)
+        await browser.click_video(page, x, y)
     return result
 
 
@@ -55,7 +55,7 @@ async def ocr_clicks_txts(page: Page, ocr_output: types.OCR_Results, match_txts:
     results = await match_ocr_txts(ocr_output, match_txts, exact)
     for result in results:
         x, y = get_box_center(result.box)
-        await broswer.click_video(page, x, y)
+        await browser.click_video(page, x, y)
     return results
 
 
@@ -114,13 +114,13 @@ async def click_cv_template(page: Page, template_path: str, threshold: float = 0
         match_res = get_cv_box_center(cv_result)
         log.info(f"模板 {template_path} 中心在 {match_res}")
         x, y = match_res
-        await broswer.click_video(page, x, y)
+        await browser.click_video(page, x, y)
         return (x, y)
 
 
 async def click_cv_template_retry(page: Page, template_path: str, threshold: float = 0.75, retry_times: int = 5, retry_interval: int = 1):
     for i in range(retry_times):
-        await broswer.screen_shot(page)
+        await browser.screen_shot(page)
         click_cv_result = await click_cv_template(page, template_path, threshold)
         if click_cv_result:
             return click_cv_result

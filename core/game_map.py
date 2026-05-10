@@ -7,6 +7,7 @@ from .log import logger as log
 class GameIdEnum(StrEnum):
     JQL_GJF = "jql_gjf"
     JQL = "jql"
+    BHXQTD = "bhxqtd"
     BHXQTD_GJF = "bhxqtd_gjf"
 
 class GameIdNotFoundError(Exception):
@@ -16,6 +17,7 @@ def get_game_id(game: config.GameEnum, server: config.GameServerEnum):
     game_id_map = {
         (config.GameEnum.jql, config.GameServerEnum.os): GameIdEnum.JQL_GJF,
         (config.GameEnum.jql, config.GameServerEnum.cn): GameIdEnum.JQL,
+        (config.GameEnum.hsr, config.GameServerEnum.cn): GameIdEnum.BHXQTD,
         (config.GameEnum.hsr, config.GameServerEnum.os): GameIdEnum.BHXQTD_GJF,
 
     }

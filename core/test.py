@@ -1,6 +1,6 @@
 from playwright.async_api import Page, async_playwright
 
-from . import broswer, config
+from . import browser, config
 from . import main as core_main
 from . import ocr, utils
 from .game.zzz import main as zzz_main
@@ -10,7 +10,7 @@ from .log import logger as log
 async def test(page: Page, account: config._GameAccount):
     # await zzz_main.goto_game_home(page, account)
     while True:
-        await broswer.screen_shot(page)
+        await browser.screen_shot(page)
         ocr_output = await ocr.ocr_image()
         await utils.sleep(page, 1)
 

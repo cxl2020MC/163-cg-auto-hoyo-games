@@ -1,6 +1,6 @@
 from playwright.async_api import Page
 
-from ... import broswer, config, push, utils
+from ... import browser, config, push, utils
 from ...log import logger as log
 
 # from . import zzz_utils
@@ -40,7 +40,7 @@ async def open_phone(page: Page):
         else:
             log.info("当前不是手机界面")
             # 刷新截图，防止二次点击，导致切换手机界面
-            await broswer.screen_shot(page)
+            await browser.screen_shot(page)
             await utils.click_cv_template(page, "./core/template/hsr/phone.png")
         await utils.sleep(page, 1)
     return False
@@ -113,8 +113,8 @@ async def auto_attack(page: Page, account: config._GameAccount):
         # log.error("没有找到增加次数按钮，无法进行自动战斗")
         raise Exception("没有找到增加次数按钮，无法进行自动战斗")
 
-    for i in range(1, 8):
-        await broswer.click_video(page, *add_btn_pos)
+    for i in range(1, 24):
+        await browser.click_video(page, *add_btn_pos)
         log.info(f"第 {i+1} 次点击增加次数按钮")
     await utils.ocr_click_txts_retry(page, ["挑战"], exact=True)
     await utils.sleep(page, 2)
@@ -157,7 +157,7 @@ async def reward_daily_task(page: Page, account: config._GameAccount):
         if await utils.ocr_click_txts(page, ocr_output, ["领取"], exact=True):
             log.info("找到每日委托奖励")
     await utils.sleep(page, 1)
-    await broswer.screen_shot(page)
+    await browser.screen_shot(page)
     await utils.click_cv_template_retry(page, "./core/template/hsr/daily_task_reward.png")
     await confirm_to_receive_reward(page)
     await push.screen_shot_and_push(page, account, "领取每日委托奖励")

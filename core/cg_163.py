@@ -31,18 +31,24 @@ async def auto_login(page: Page, phone, password):
     await page.wait_for_timeout(10000)
 
 
-async def launch_game(page: Page, game_code: str = "jql_gjf"):
-    await page.goto(f"https://cg.163.com/?action_link=cloudgaming%3A%2F%2Fstartgame%3Fgame_code%3D{game_code}%26game_open_action%3Dthis_game")
+def get_launch_game_url(game_code: str):
+    return f"https://cg.163.com/?action_link=cloudgaming%3A%2F%2Fstartgame%3Fgame_code%3D{game_code}%26game_open_action%3Dthis_game"
+
+
+async def launch_game(page: Page):
+    # await page.goto(get_launch_game_url(game_code))
     await check_login(page)
-    asyncio.create_task(check_cg_game_activity(page))
-    asyncio.create_task(check_cg_game_key_position(page))
-    asyncio.create_task(select_cg_server_run_game_normal_mode(page))
-    asyncio.create_task(agree_exit_cg_game(page))
+    add_background_task(asyncio.create_task(check_cg_game_activity(page)))
+    add_background_task(asyncio.create_task(check_cg_game_home_activity(page)))
+    add_background_task(asyncio.create_task(check_cg_game_key_position(page)))
+    add_background_task(asyncio.create_task(
+        select_cg_server_run_game_normal_mode(page)))
+    add_background_task(asyncio.create_task(agree_exit_cg_game(page)))
 
 
 async def check_cg_game_activity(page: Page):
     log.debug("检查云游戏活动")
-    loctor = page.locator(".pc_close")
+    loctor = page.locator("button.pc_close")
     try:
         await expect(loctor).to_be_visible()
         activity_status = True
@@ -55,6 +61,25 @@ async def check_cg_game_activity(page: Page):
         await loctor.click()
 
     return activity_status
+
+
+async def check_cg_game_home_activity(page: Page):
+    log.debug("检查云游戏主页活动")
+    # <button data-v-437e421d="" class="slide-close"></button>
+
+    loctor = page.locator("button.slide-close")
+    try:
+        await expect(loctor).to_be_visible()
+        home_activity_status = True
+    except AssertionError:
+        home_activity_status = False
+
+    log.info(f"云游戏主页活动页面: {home_activity_status}")
+    if home_activity_status:
+        log.info("发现云游戏主页活动，点击关闭")
+        await loctor.click()
+
+    return home_activity_status
 
 
 async def check_cg_game_key_position(page: Page):
@@ -104,3 +129,12 @@ async def exit_cg_game(page: Page):
     await page.get_by_text("退出游戏").click()
     await page.get_by_text("确认", exact=True).click()
     return True
+
+
+background_task: set[asyncio.Task] = set()
+
+
+def add_background_task(task: asyncio.Task):
+    log.info(f"添加后台任务: {task.get_name()} ，当前后台任务数量: {len(background_task)+1}")
+    background_task.add(task)
+    task.add_done_callback(background_task.discard)
