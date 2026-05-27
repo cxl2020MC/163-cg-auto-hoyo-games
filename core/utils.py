@@ -4,7 +4,7 @@ from . import browser, config, img_cv, ocr, types
 from .log import logger as log
 
 
-async def sleep(page: Page, seconds: int):
+async def sleep(page: Page, seconds: float):
     await page.wait_for_timeout(seconds * 1000)
 
 

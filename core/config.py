@@ -18,11 +18,17 @@ class GameServerEnum(StrEnum):
     bilibili = "bilibili"
 
 
+class ZZZGameConfig(BaseModel):
+    cofee: bool = True
+    role_cultivation: bool = True
+
+
 class _GameAccount(BaseModel):
     id: str
     game: GameEnum = GameEnum.jql
     server: GameServerEnum = GameServerEnum.cn
     group_id: int | None = None
+    game_config: ZZZGameConfig | None = None
 
 
 class _Config(BaseModel):
@@ -50,3 +56,10 @@ def get_img_file_path(file_name):
 
 
 SCREENSHOT_PATH = get_img_file_path("screenshot.png")
+
+
+def get_account_game_config[T](account: _GameAccount, config_type: type[T]) -> T | None:
+    account_game_config = account.game_config
+    if isinstance(account_game_config, config_type):
+        return account_game_config
+    return None

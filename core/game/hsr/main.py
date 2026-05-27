@@ -16,8 +16,9 @@ async def goto_game_home(page: Page, account: config._GameAccount):
     for _ in range(200):
         ocr_output = await utils.get_ocr(page)
         await utils.ocr_click_txts(page, ocr_output, ["开始游戏", "点击进入"])
-        if await utils.ocr_click_txts(page, ocr_output, ["列车补给"]):
+        if await utils.match_ocr_txt(ocr_output, ["列车补给"]):
             log.info("领取月卡奖励")
+            await utils.ocr_click_txts_retry(page, ["点击领取"])
             await push.screen_shot_and_push(page, account, "月卡奖励")
 
         if await utils.match_screenshot_cv_template("./core/template/hsr/phone.png"):
@@ -156,6 +157,7 @@ async def reward_daily_task(page: Page, account: config._GameAccount):
         log.debug(f"第 {i+1} 次检查领取每日奖励")
         if await utils.ocr_click_txts(page, ocr_output, ["领取"], exact=True):
             log.info("找到每日委托奖励")
+            await utils.sleep(page, 0.5)
     await utils.sleep(page, 1)
     await browser.screen_shot(page)
     await utils.click_cv_template_retry(page, "./core/template/hsr/daily_task_reward.png")

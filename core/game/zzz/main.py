@@ -2,7 +2,7 @@ from playwright.async_api import Page
 
 from ... import browser, config, ocr, push, utils
 from ...log import logger as log
-from . import zzz_utils
+from . import zzz_utils, auto_attack
 
 
 async def main(page: Page, account: config._GameAccount):
@@ -80,7 +80,13 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
 async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
     match index:
         case 0:
-            await quick_book_daily_task_coffee(page, account)
+            account_game_config = config.get_account_game_config(account, config.ZZZGameConfig)
+            if account_game_config and not account_game_config.cofee:
+                log.info("跳过咖啡任务")
+                return
+            else:
+                await quick_book_daily_task_coffee(page, account)
+        
         case 1:
             await quick_book_daily_task_divine(page, account)
         case 2:
@@ -212,3 +218,25 @@ async def open_function(page: Page, function_name: str):
     # else:
     #     log.warning(f"没有找到 {function_name} 按钮")
     #     return False
+
+async def open_xunlian(page: Page):
+    await open_quick_book(page)
+    await utils.ocr_click_txts_retry(page, ["训练"])
+    await utils.sleep(page, 1)
+
+async def pyjs(page: Page, account: config._GameAccount):
+    await open_xunlian(page)
+    await utils.ocr_click_txts_retry(page, ["前往"])
+    await zzz_utils.agree_teleport(page)
+    # await zzz_utils.wait_for_teleport(page)
+    for i in range(60):
+        ocr_output = await utils.get_ocr(page)
+        # game_status = await check_game_status(page, ocr_output)
+        # if game_status == Game_Status.Street:
+        if await utils.match_ocr_txt(ocr_output, ["街区"]):
+            log.info("已到达目的地")
+            break
+        await utils.sleep(page, 1)
+        await auto_attack.auto_attack(page, account)
+
+
