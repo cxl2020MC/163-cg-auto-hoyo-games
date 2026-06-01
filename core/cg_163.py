@@ -2,7 +2,7 @@ import asyncio
 import traceback
 from typing import Coroutine, Any
 
-from playwright.async_api import Page, expect
+from playwright.async_api import Page, expect, Locator
 
 from .log import logger as log
 
@@ -59,16 +59,16 @@ async def launch_game(page: Page, game_code: str):
     add_background_task(select_cg_server_run_game_normal_mode(page), "select_cg_server_run_game_normal_mode")
     add_background_task(agree_exit_cg_game(page), "agree_exit_cg_game")
 
-
+async def click_locator(locator: Locator):
+    # return await locator.click()
+    return await locator.dispatch_event('click')
 
 async def check_cg_game_activity(page: Page):
     log.debug("检查云游戏活动")
-    # <button class="pc_close"></button>
-    # loctor = page.locator("button.pc_close")
-    loctor = page.locator("div.gameactivity")
-    # <div class="gameactivity"><!----><div data-v-5eabf4e4="" class="confirm-shade iframe-confirm fadein is-run " style=""><div data-v-5eabf4e4="" class="cofirm confirm-transparent run-zj"><!----><div data-v-5eabf4e4="" class="cofirm-cont"><!----><div data-v-5eabf4e4="" class="confirm-main"><iframe data-v-5eabf4e4="" src="https://cloudgame.webapp.163.com/checkin/?activityid=69faebf7d3495da1fcca0eab&amp;source=run_page&amp;token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Nzg2Njc5NzUsIm5iZiI6MTc3ODY2Nzk3NSwianRpIjoiMzVmOGJjMTAtOWI2Zi00OWZlLTllYjYtMzY0MzhjYjNiZjEyIiwiaWRlbnRpdHkiOiI2OWUyZWRmMDIxMWVkZDEzODYwNjk1MjMiLCJmcmVzaCI6ZmFsc2UsInR5cGUiOiJhY2Nlc3MiLCJ1c2VyX2NsYWltcyI6eyJudW1iZXIiOjY4MjMyNjE4NCwidGltZXN0YW1wIjoxNzc4NjY3OTc1LCJzYWx0Ijo5NH19.NX8lkMiPtt26z-ypoH3flI_9r0UYl-8V7DLi8FH9ea8" allowfullscreen="allowfullscreen" allowtransparency="true" frameborder="0" style="width: 100%; height: 100%;"></iframe></div><div data-v-5eabf4e4="" class="cofirm-btns"></div></div></div></div><!----><div data-v-5eabf4e4="" class="confirm-shade" style="display: none;"><div data-v-5eabf4e4="" class="cofirm faq-confirm"><!----><div data-v-5eabf4e4="" class="cofirm-cont"><!----><div data-v-5eabf4e4="" class="faq-scroll"><div data-v-5eabf4e4="" class="faq-detail f14"><div data-v-7a997152="" class="htmltext" data-v-5eabf4e4=""></div></div></div><div data-v-5eabf4e4="" class="cofirm-btns"></div></div></div></div><!----><!----><!----><!----><!----><!----><div data-v-5eabf4e4="" class="confirm-shade frametips-confirm" style="display: none;"><div data-v-5eabf4e4="" class="cofirm"><!----><div data-v-5eabf4e4="" class="cofirm-cont"><!----><!----><div data-v-5eabf4e4="" class="confirm-main"></div><div data-v-5eabf4e4="" class="cofirm-btns"></div></div></div></div><div class="confirm-shade fadeout" style="display: none;"><div class="appointment landscape"><div class="appointbox"><!----><div class="appointdesc"><p class="f14"></p><button class="g-Btn g-Btn-green2">马上预约<i class="icon icon-arrow-white"></i></button></div></div><button class="slide-close"></button></div></div><!----><div class="confirm-shade" style="display: none;"><div class="port_resource_con"><p class="port_resource_tips"><span></span><i></i>点击空白处关闭<i class="right"></i><span></span></p><div class="port_resource_iframe" style=""><iframe allowfullscreen="allowfullscreen" allowtransparency="true" frameborder="0" style="width: 100%; height: 100%; transform: translate3d(0px, 0px, 1px);"></iframe><div class="port_resource_enter"><button class="g-Btn g-Btn-green2">前往活动页</button></div></div></div></div></div>
+
+    locator = page.locator("div.gameactivity")
     try:
-        await expect(loctor).to_be_visible(timeout=50000)
+        await expect(locator).to_be_visible(timeout=50000)
         activity_status = True
     except AssertionError:
         activity_status = False
@@ -77,14 +77,7 @@ async def check_cg_game_activity(page: Page):
     if activity_status:
         log.info("发现云游戏活动，点击关闭")
         await (page.locator("iframe").first.content_frame.get_by_role("button")).click()
-        # frame = page.frame(url=r'.*')
-        # log.debug(f"当前页面的iframe: {page.frames}")
-        # if frame:
-        #     log.info("找到云游戏活动框架，尝试在框架内点击关闭按钮")
-        #     loctor = frame.locator(".pc_close")
-        #     await expect(loctor).to_be_visible()
-        #     log.info(f"在云游戏活动框架内找到关闭按钮 {loctor}，点击关闭")
-        #     await loctor.click()
+
         # await page.evaluate('() => document.querySelector(".gameactivity").remove()')
 
     return activity_status
@@ -92,30 +85,27 @@ async def check_cg_game_activity(page: Page):
 
 async def check_cg_game_activity_v2(page: Page):
     log.debug("检查云游戏活动")
-    loctor = page.locator("div.gameactivity")
-    for _ in range(3):
-        try:
-            await expect(loctor).to_be_visible(timeout=50000)
-            activity_status = True
-        except AssertionError:
-            activity_status = False
+    locator = page.locator("div.gameactivity")
+    try:
+        await expect(locator).to_be_visible(timeout=50000)
+        activity_status = True
+    except AssertionError:
+        activity_status = False
 
-        log.info(f"云游戏活动页面: {activity_status}")
-        if activity_status:
-            log.info("发现云游戏活动，点击关闭")
-            await page.evaluate('() => document.querySelector(".gameactivity").remove()')
-        else:
-            break
-        # return activity_status
+    log.info(f"云游戏活动页面: {activity_status}")
+    if activity_status:
+        log.info("发现云游戏活动，尝试关闭")
+        await page.evaluate('() => document.querySelector("div.gameactivity").remove()')
+    return activity_status
 
 
 async def check_cg_game_home_activity(page: Page):
     log.debug("检查云游戏主页活动")
     # <button data-v-437e421d="" class="slide-close"></button>
-    # slide
-    loctor = page.locator("div.slide")
+    # div.slide
+    locator = page.locator("div.slide")
     try:
-        await expect(loctor).to_be_visible()
+        await expect(locator).to_be_visible()
         home_activity_status = True
     except AssertionError:
         home_activity_status = False
@@ -123,17 +113,19 @@ async def check_cg_game_home_activity(page: Page):
     log.info(f"云游戏主页活动页面: {home_activity_status}")
     if home_activity_status:
         log.info("发现云游戏主页活动，点击关闭")
-        loctor = page.locator("div.slide button.slide-close")
-        await loctor.click()
+        locator = page.locator("div.slide button.slide-close")
+        # await locator.click()
+        # await locator.dispatch_event('click')
+        await click_locator(locator)
 
     return home_activity_status
 
 
 async def check_cg_game_key_position(page: Page):
     log.debug("检查云游戏按键位置")
-    loctor = page.locator("div.keylayout")
+    locator = page.locator("div.keylayout")
     try:
-        await expect(loctor).to_be_visible(timeout=50000)
+        await expect(locator).to_be_visible(timeout=50000)
         key_position_status = True
     except AssertionError:
         key_position_status = False
@@ -141,7 +133,7 @@ async def check_cg_game_key_position(page: Page):
     log.info(f"云游戏按键位置页面: {key_position_status}")
     if key_position_status:
         log.info("发现云游戏按键位置页面，尝试关闭")
-        await loctor.press("F12")
+        await locator.press("F12")
 
     return key_position_status
 
