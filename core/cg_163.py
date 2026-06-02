@@ -148,7 +148,7 @@ async def select_cg_server_run_game_normal_mode(page: Page):
     if normal_mode_status:
         log.info("发现云游戏切换服务器页面，尝试点击进入游戏")
         await page.locator(".serve_normal .icon.serve_select").click()
-        await page.get_by_text("马上游玩").click()
+        await click_locator(page.get_by_text("马上游玩"))
 
 
 async def agree_exit_cg_game(page: Page):

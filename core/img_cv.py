@@ -14,25 +14,13 @@ from .log import logger as log
 
 
 async def match_template(img_path: str, template_path: str, mask_path: str | None = None, *, flag: int = cv2.IMREAD_COLOR, method: int = cv2.TM_CCOEFF_NORMED) -> types.CV_Result:
-    img = await asyncio.to_thread(cv2.imread, img_path, flag)
-    template_img = await asyncio.to_thread(cv2.imread, template_path, flag)
-    mask_img = await asyncio.to_thread(cv2.imread, mask_path, cv2.IMREAD_GRAYSCALE) if mask_path else None
-    assert img is not None
-    assert template_img is not None
-    cv2.TM_CCORR_NORMED
-    res = cv2.matchTemplate(
-        img, template_img, method, mask=mask_img)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-    height, width = template_img.shape[:2]
-    x, y = max_loc
-    result = types.CV_Result(x=x, y=y, width=width,
-                             height=height, score=max_val)
+    img, template_img, mask_img = await load_cv_img(img_path, template_path, mask_path, flag=flag)
+    result = await match_template_from_matlike(img, template_img, mask_img, method=method)
     log.debug(f"图片 {template_path} 模板匹配结果：{result}")
-    await asyncio.to_thread(cv2.rectangle, img, max_loc, (max_loc[0] + width, max_loc[1] + height), (0, 0, 255), 1)
-    await asyncio.to_thread(cv2.imwrite, 'img/cv_res.png', img)
     return result
 
-async def match_template_v2(img: cv2.typing.MatLike, template_img: cv2.typing.MatLike, mask_img: cv2.typing.MatLike | None = None, *, method: int = cv2.TM_CCOEFF_NORMED) -> types.CV_Result:
+
+async def match_template_from_matlike(img: cv2.typing.MatLike, template_img: cv2.typing.MatLike, mask_img: cv2.typing.MatLike | None = None, *, method: int = cv2.TM_CCOEFF_NORMED) -> types.CV_Result:
     res = cv2.matchTemplate(
         img, template_img, method, mask=mask_img)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
@@ -40,9 +28,9 @@ async def match_template_v2(img: cv2.typing.MatLike, template_img: cv2.typing.Ma
     x, y = max_loc
     result = types.CV_Result(x=x, y=y, width=width,
                              height=height, score=max_val)
-    log.debug(f"图片 {template_path} 模板匹配结果：{result}")
     await asyncio.to_thread(cv2.rectangle, img, max_loc, (max_loc[0] + width, max_loc[1] + height), (0, 0, 255), 1)
     await asyncio.to_thread(cv2.imwrite, 'img/cv_res.png', img)
+    log.debug(f"模板匹配结果: {result}")
     return result
 
 
@@ -135,7 +123,7 @@ async def get_color_in_roi(img: cv2.typing.MatLike, template_img: cv2.typing.Mat
     # assert img is not None
     # assert template_img is not None
 
-    cv_result = await match_template_v2(img, template_img)
+    cv_result = await match_template_from_matlike(img, template_img)
     if not cv_result:
         return None
 
@@ -147,10 +135,17 @@ async def get_color_in_roi(img: cv2.typing.MatLike, template_img: cv2.typing.Mat
     return avg_color
 
 
-async def classify_state_by_color(img_path: str, template_path: str, color_ranges: dict[str, tuple]) -> str | None:
+async def get_color_in_image(img_path: str):
+    img = await asyncio.to_thread(cv2.imread, img_path, cv2.IMREAD_COLOR_BGR)
+    assert img is not None
+    avg_color = cv2.mean(img)[:3]
+    return avg_color
+
+
+async def classify_state_by_color_range[T](img_path: str, template_path: str, color_ranges: dict[T, tuple[int, int, int]]) -> T | None:
     """
     根据颜色分类状态
-    color_ranges: {"未准备好": (B_min, G_min, R_min, B_max, G_max, R_max), ...}
+    color_ranges: {"未准备好": (B_range, G_range, R_range)}, ...}
     返回: 状态名称 或 None
     """
 
@@ -159,43 +154,34 @@ async def classify_state_by_color(img_path: str, template_path: str, color_range
     if color is None:
         return None
 
-    b, g, r = color
-
-    # 检查每个颜色范围
-    for state_name, (b_min, g_min, r_min, b_max, g_max, r_max) in color_ranges.items():
-        if b_min <= b <= b_max and g_min <= g <= g_max and r_min <= r <= r_max:
-            log.info(f"技能状态识别: {state_name}, 颜色=BGR({b},{g},{r})")
-            return state_name
-
-    log.warning(f"未能识别的颜色: BGR({b},{g},{r})")
+    for state, target_color in color_ranges.items():
+        if await match_color(color, target_color):
+            log.debug(f"根据颜色判断状态为: {state}")
+            return state
     return None
 
-async def classify_state_by_color_v2(img_path: str, template_path: str, color_ranges: dict[str, tuple[tuple[int, int], tuple[int, int], tuple[int, int]]]) -> str | None:
-    """
-    根据颜色分类状态
-    color_ranges: {"未准备好": (B_min, B_max), (G_min, G_max), (R_min, R_max)}, ...}
-    返回: 状态名称 或 None
-    """
 
-    img, template_img, _ = await load_cv_img(img_path, template_path)
-    color = await get_color_in_roi(img, template_img)
-    if color is None:
-        return None
-
+async def match_color(color, target_color: tuple[int, int, int], color_threshold: int = 30) -> bool:
+    """
+    判断ROI的颜色是否在目标颜色范围内
+    target_color: (B, G, R)
+    color_threshold: 颜色容差，默认30
+    返回: 是否匹配
+    """
     b, g, r = color
+    target_b, target_g, target_r = target_color
 
-    # 检查每个颜色范围
-    for state_name, (b_range, g_range, r_range) in color_ranges.items():
-        b_min, b_max = b_range
-        g_min, g_max = g_range
-        r_min, r_max = r_range
+    if (abs(b - target_b) <= color_threshold and
+        abs(g - target_g) <= color_threshold and
+            abs(r - target_r) <= color_threshold):
+        log.debug(
+            f"颜色匹配成功: 目标BGR({target_b},{target_g},{target_r}), 实际BGR({b},{g},{r})")
+        return True
 
-        if b_min <= b <= b_max and g_min <= g <= g_max and r_min <= r <= r_max:
-            log.info(f"技能状态识别: {state_name}, 颜色=BGR({b},{g},{r})")
-            return state_name
+    log.warning(
+        f"颜色匹配失败: 目标BGR({target_b},{target_g},{target_r}), 实际BGR({b},{g},{r})")
+    return False
 
-    log.warning(f"未能识别的颜色: BGR({b},{g},{r})")
-    return None
 
 if __name__ == '__main__':
     img_path = r"img\screenshot copy 20.png"
@@ -208,6 +194,7 @@ if __name__ == '__main__':
     # for i in [cv2.TM_CCOEFF_NORMED, cv2.TM_CCORR_NORMED, cv2.TM_SQDIFF_NORMED, cv2.TM_CCOEFF, cv2.TM_CCORR, cv2.TM_SQDIFF]:
     #     res = asyncio.run(match_template(img_path, template_path, method=i))
     #     print(f"Method {i}: {res}")
+
     async def test_color_in_roi():
         img, template_img, _ = await load_cv_img(img_path, template_path)
         return await get_color_in_roi(img, template_img)

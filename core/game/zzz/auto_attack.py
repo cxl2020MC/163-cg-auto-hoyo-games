@@ -19,6 +19,16 @@ class Skill_Status(StrEnum):
     Ready = "准备好"
     Ysg_Ready = "叶瞬光-准备好"
 
+class Auto_Attack:
+    def __init__(self, page: Page, account: config._GameAccount):
+        self.page = page
+        self.skill_status_color_thresholds = {
+            Skill_Status.Not_Ready: ((0, 50), (0, 50), (0, 50)),
+            Skill_Status.Ready: ((200, 255), (200, 255), (200, 255)),
+            Skill_Status.Ysg_Ready: ((100, 150), (100, 150), (200, 255)),
+        }
+    
+
 
 async def auto_attack(page: Page, account: config._GameAccount):
     await utils.ocr_click_txts_retry(page, ["下一步"], exact=True)
@@ -55,12 +65,5 @@ async def click_skill(page: Page, delay: float = 0):
     await browser.get_video_element(page).press("e", delay=delay)
 
 
-async def get_skill_status(page: Page) -> Skill_Status:
-    if await utils.match_screenshot_cv_template("./core/template/attack/skill.png"):
-        game_status = Skill_Status.Ready
-    elif await utils.match_screenshot_cv_template("./core/template/attack/skill_ysg.png"):
-        game_status = Skill_Status.Ysg_Ready
-    else:
-        game_status = Skill_Status.Not_Ready
-    log.info(f"当前技能状态为: {game_status}")
-    return game_status
+async def get_skill_status(page: Page):
+    pass
