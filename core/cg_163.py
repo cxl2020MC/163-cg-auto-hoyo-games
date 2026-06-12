@@ -121,6 +121,26 @@ async def check_cg_game_home_activity(page: Page):
     return home_activity_status
 
 
+async def check_cg_game_home_activity_v2(page: Page):
+    log.debug("检查云游戏主页活动")
+    # <button data-v-437e421d="" class="slide-close"></button>
+    # div.slide
+    locator = page.locator("div.slide")
+    try:
+        await expect(locator).to_be_visible()
+        home_activity_status = True
+    except AssertionError:
+        home_activity_status = False
+
+    log.info(f"云游戏主页活动页面: {home_activity_status}")
+    if home_activity_status:
+        log.info("发现云游戏主页活动，尝试关闭")
+        await page.evaluate('() => document.querySelector("div.slide").remove()')
+
+
+    return home_activity_status
+
+
 async def check_cg_game_key_position(page: Page):
     log.debug("检查云游戏按键位置")
     locator = page.locator("div.keylayout")
@@ -147,7 +167,7 @@ async def select_cg_server_run_game_normal_mode(page: Page):
     log.info(f"云游戏切换服务器页面: {normal_mode_status}")
     if normal_mode_status:
         log.info("发现云游戏切换服务器页面，尝试点击进入游戏")
-        await page.locator(".serve_normal .icon.serve_select").click()
+        await click_locator(page.locator(".serve_normal .icon.serve_select"))
         await click_locator(page.get_by_text("马上游玩"))
 
 

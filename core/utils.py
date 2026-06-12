@@ -151,3 +151,5 @@ async def get_page_size(page: Page):
         height = bounding_box["height"]
         log.info(f"页面大小: {width}x{height}")
         return (width, height)
+
+
