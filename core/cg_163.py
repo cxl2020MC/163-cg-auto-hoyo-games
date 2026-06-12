@@ -52,10 +52,12 @@ async def launch_game(page: Page, game_code: str):
     # asyncio.create_task(select_cg_server_run_game_normal_mode(page))
     # asyncio.create_task(agree_exit_cg_game(page))
 
-    add_background_task(check_cg_game_activity(page), "check_cg_game_activity")
-    add_background_task(check_cg_game_home_activity(page), "check_cg_game_home_activity")
-    # add_background_task(check_cg_game_activity_v2(page), "check_cg_game_activity_v2")
-    add_background_task(check_cg_game_key_position(page), "check_cg_game_key_position")
+    # add_background_task(check_cg_game_activity(page), "check_cg_game_activity")
+    # add_background_task(check_cg_game_home_activity(page), "check_cg_game_home_activity")
+    # add_background_task(check_cg_game_key_position(page), "check_cg_game_key_position")
+    add_background_task(check_cg_game_activity_v2(page), "check_cg_game_activity_v2")
+    add_background_task(check_cg_game_home_activity_v2(page), "check_cg_game_home_activity_v2")
+    add_background_task(check_cg_game_key_position_v2(page), "check_cg_game_key_position_v2")
     add_background_task(select_cg_server_run_game_normal_mode(page), "select_cg_server_run_game_normal_mode")
     add_background_task(agree_exit_cg_game(page), "agree_exit_cg_game")
 
@@ -157,6 +159,23 @@ async def check_cg_game_key_position(page: Page):
 
     return key_position_status
 
+
+async def check_cg_game_key_position_v2(page: Page):
+    log.debug("检查云游戏按键位置")
+    locator = page.locator("div.keylayout")
+    try:
+        await expect(locator).to_be_visible(timeout=50000)
+        key_position_status = True
+    except AssertionError:
+        key_position_status = False
+
+    log.info(f"云游戏按键位置页面: {key_position_status}")
+    if key_position_status:
+        log.info("发现云游戏按键位置页面，尝试关闭")
+        await page.evaluate('() => document.querySelector("div.keylayout").remove()')
+
+
+    return key_position_status
 
 async def select_cg_server_run_game_normal_mode(page: Page):
     try:

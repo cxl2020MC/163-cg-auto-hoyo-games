@@ -4,7 +4,7 @@ import time
 
 
 
-def retry(retry_times: int = 10, raise_exception: bool = False):
+def retry(retry_times: int = 10, raise_exception: bool = False, raise_exception_error: Exception | None = None):
     def decorator(func):
         async def wrapper(*args, **kwargs):
             start_time = time.time()
@@ -15,6 +15,8 @@ def retry(retry_times: int = 10, raise_exception: bool = False):
                 log.info(f"函数 {func.__name__} 无返回值，重试 ({int(time.time() - start_time)} / {retry_times} s)")
             log.error(f"尝试了 {retry_times} 次，函数 {func.__name__} 仍然失败")
             if raise_exception:
+                if raise_exception_error:
+                    raise raise_exception_error
                 raise Exception(f"函数 {func.__name__} 在 {retry_times} 秒内未能成功执行")
             return None
         return wrapper
