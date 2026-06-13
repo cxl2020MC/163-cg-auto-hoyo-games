@@ -2,7 +2,7 @@ from enum import StrEnum
 
 from playwright.async_api import Page
 
-from ... import browser, config, img_cv, ocr, types, utils
+from ... import browser, types, utils, retry
 from ...log import logger as log
 
 
@@ -10,78 +10,66 @@ class Game_Status(StrEnum):
     Street = "街区"
     Quick_Book = "快捷手册"
     Loading = "加载中"
+    Agree_Model = "同意"
     Unknown = "未知"
 
-# 检测游戏当前状态
 
-
+# 检查游戏状态
 async def check_game_status(page: Page, ocr_result: types.OCR_Results):
     log.info("检查游戏状态")
-    for ocr_result_item in ocr_result:
-        if "星期" in ocr_result_item.txt:
-            game_status = Game_Status.Street
-            break
-        elif "QUICK" in ocr_result_item.txt:
-            game_status = Game_Status.Quick_Book
-            break
-        elif "NOW LOADING" in ocr_result_item.txt:
-            game_status = Game_Status.Loading
-            break
-        else:
-            game_status = Game_Status.Unknown
+    if await is_in_street(ocr_result):
+        game_status = Game_Status.Street
+    elif await utils.match_ocr_txt(ocr_result, ["QUICK"]):
+        game_status = Game_Status.Quick_Book
+    elif await utils.match_ocr_txt(ocr_result, ["确定"], exact=True):
+        game_status = Game_Status.Agree_Model
+    elif await utils.match_ocr_txt(ocr_result, ["NOW LOADING"]):
+        game_status = Game_Status.Loading
+    else:
+        game_status = Game_Status.Unknown
     log.info(f"当前游戏状态为: {game_status}")
     return game_status
 
 
 # 返回街区
 async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
-
     cv_reslt = await utils.match_screenshot_cv_template("./core/template/tc.png", 0.65)
     if cv_reslt:
         cv_box_center = utils.get_cv_box_center(cv_reslt)
         log.info(f"在 {cv_box_center} 找到退出按钮")
         x, y = cv_box_center
         await browser.click_video(page, x, y)
-
     else:
         await utils.ocr_click_txts(page, ocr_result, ["X", "x"])
 
 
-async def agree_teleport(page: Page) -> bool:
-    for i in range(5):
-        ocr_output = await utils.get_ocr(page)
-        log.debug(f"第{i+1}次检查同意传送页面")
-        if await utils.match_ocr_txt(ocr_output, ["传送"]):
-            log.info("当前正在同意传送页面")
-            return await click_confirm(page, ocr_output)
-        await utils.sleep(page, 1)
-    log.warning("没有找到同意传送页面")
-    return False
+async def is_in_street(ocr_result: types.OCR_Results):
+    if await utils.match_ocr_txt(ocr_result, ["星期"]):
+        log.info("当前在街区")
+        return True
 
 
-async def wait_for_teleport(page: Page) -> bool:
-    for i in range(60):
-        ocr_output = await utils.get_ocr(page)
-        game_status = await check_game_status(page, ocr_output)
-        if game_status == Game_Status.Street:
-            log.info("已到达目的地")
-            return True
-        await utils.sleep(page, 1)
-    return False
+@retry.retry(retry_count=120, raise_exception_error=Exception("传送加载超时"))
+async def wait_for_teleport(page: Page):
+    ocr_output = await utils.get_ocr(page)
+    if await is_in_street(ocr_output):
+        log.info("已到达目的地")
+        return True
+
+
+async def agree_teleport(page: Page):
+    return await click_confirm(page)
 
 
 # 点击弹窗确认按钮
-async def click_confirm(page: Page, ocr_output: types.OCR_Results | None = None) -> bool:
-    for i in range(5):
-        ocr_output = await utils.get_ocr(page, ocr_output)
-        log.debug(f"第{i+1}次检查确认按钮")
-        if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"], exact=True):
-            return True
-        # 重置ocr_output
-        ocr_output = None
-        await utils.sleep(page, 1)
-    log.warning("没有找到确认按钮")
-    return False
+@retry.retry(raise_exception_error=Exception("没有找到确认按钮"))
+async def click_confirm(page: Page, ocr_output: types.OCR_Results | None = None):
+    ocr_output = await utils.get_ocr(page, ocr_output)
+    if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"], exact=True):
+        return True
+    # 重置ocr_output
+    ocr_output = None
+    await utils.sleep(page, 1)
 
 
 async def click_interaction(page: Page):

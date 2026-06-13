@@ -1,27 +1,33 @@
 from typing import Any, Callable
+from enum import StrEnum
 from .log import logger as log
 
 import time
 
 
+class RetryCountType(StrEnum):
+    TIME = "time"
+    NUM = "num"
 
-def time_retry(retry_times: int = 10, check_result: Callable[[Any], bool] = bool, raise_exception: bool = True, raise_exception_error: Exception | None = None):
+
+def retry(retry_count_type: RetryCountType = RetryCountType.TIME, retry_count: int = 30, check_result: Callable[[Any], bool] = bool, raise_exception: bool = True, raise_exception_error: Exception | None = None):
     def decorator(func):
         async def wrapper(*args, **kwargs):
             start_time = time.time()
-            while time.time() - start_time < retry_times:
+            while time.time() - start_time < retry_count:
                 result = await func(*args, **kwargs)
                 if check_result(result):
                     return result
-                log.info(f"函数 {func.__name__} 返回值不符合规则，重试 ({int(time.time() - start_time)}s / {retry_times}s)")
-            log.error(f"尝试了 {retry_times} 次，函数 {func.__name__} 仍然失败")
+                log.info(
+                    f"函数 {func.__name__} 返回值不符合规则，重试 ({int(time.time() - start_time)}/{retry_count}{"s" if retry_count_type == RetryCountType.TIME else ""})")
+            error_msg = f"函数 {func.__name__} 在重试类型为 {retry_count_type} 的 {retry_count} 次重试内未能成功执行"
+            log.error(error_msg)
             if raise_exception:
-                if raise_exception_error:
-                    raise raise_exception_error
-                raise Exception(f"函数 {func.__name__} 在 {retry_times} 秒内未能成功执行")
+                raise raise_exception_error or Exception(error_msg)
             return None
         return wrapper
     return decorator
+
 
 def check_return_value(retry_value: Any = None):
     def check_result_func(result):

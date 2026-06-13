@@ -1,6 +1,6 @@
 from playwright.async_api import Page
 
-from . import browser, config, img_cv, ocr, types
+from . import browser, config, img_cv, ocr, types, retry
 from .log import logger as log
 
 
@@ -40,6 +40,7 @@ async def match_ocr_txts(ocr_output: types.OCR_Results, match_txts: list[str],  
 async def match_ocr_txt(ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None) -> types.OCR_Result | None:
     text_positions = await match_ocr_txts(ocr_output, match_txts, exact)
     if len(text_positions) > 0:
+        log.debug(f"匹配文本 {match_txts} 到 {len(text_positions)} 个位置，返回第一个")
         return text_positions[0]
 
 
@@ -59,18 +60,35 @@ async def ocr_clicks_txts(page: Page, ocr_output: types.OCR_Results, match_txts:
     return results
 
 
-async def ocr_click_txts_retry(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None, retry_times: int = 3, retry_interval: int = 1):
-    for i in range(retry_times):
+async def ocr_click_txts_retry_old(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None, retry_nums: int = 3, retry_interval: float = 1):
+    for i in range(retry_nums):
         ocr_output = await get_ocr(page, ocr_output)
         result = await ocr_click_txts(page, ocr_output, match_txts, exact)
         if result is not None:
             return result
         ocr_output = None
         log.info(
-            f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
+            f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_nums})")
         await sleep(page, retry_interval)
-    log.warning(f"尝试了 {retry_times} 次，仍未找到文本 {match_txts}")
+    log.warning(f"尝试了 {retry_nums} 次，仍未找到文本 {match_txts}")
     return None
+
+
+async def ocr_click_txts_retry(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None,
+                               retry_type: retry.RetryCountType = retry.RetryCountType.TIME,
+                               retry_count: int = 3,
+                               retry_interval: float = 1):
+    @retry.retry(retry_count_type=retry_type, retry_count=retry_count)
+    async def click_once():
+        nonlocal ocr_output
+        ocr_output = await get_ocr(page, ocr_output)
+        result = await ocr_click_txts(page, ocr_output, match_txts, exact)
+        if result is not None:
+            return result
+        ocr_output = None
+        log.info(f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试")
+        await sleep(page, retry_interval)
+    return await click_once()
 
 
 def get_box_center(box: list):
@@ -118,7 +136,8 @@ async def click_cv_template(page: Page, template_path: str, threshold: float = 0
         return (x, y)
 
 
-async def click_cv_template_retry(page: Page, template_path: str, threshold: float = 0.75, retry_times: int = 5, retry_interval: int = 1):
+async def click_cv_template_retry_old(page: Page, template_path: str, threshold: float = 0.75,
+                                  retry_times: int = 5, retry_interval: int = 1):
     for i in range(retry_times):
         await browser.screen_shot(page)
         click_cv_result = await click_cv_template(page, template_path, threshold)
@@ -129,6 +148,20 @@ async def click_cv_template_retry(page: Page, template_path: str, threshold: flo
         await sleep(page, retry_interval)
     log.warning(f"尝试了 {retry_times} 次，仍未找到模板 {template_path}")
     return None
+
+
+async def click_cv_template_retry(page: Page, template_path: str, threshold: float = 0.75,
+                                     retry_count_type: retry.RetryCountType = retry.RetryCountType.TIME,
+                                     retry_count: int = 5, retry_interval: int = 1):
+    @retry.retry(retry_count_type=retry_count_type, retry_count=retry_count)
+    async def click_once():
+        await browser.screen_shot(page)
+        click_cv_result = await click_cv_template(page, template_path, threshold)
+        if click_cv_result:
+            return click_cv_result
+        log.info(f"未找到模板 {template_path}，等待 {retry_interval} 秒后重试")
+        await sleep(page, retry_interval)
+    return await click_once()
 
 
 async def drag(page: Page, start: tuple[float, float], end: tuple[float, float], steps: int = 20):
@@ -151,5 +184,3 @@ async def get_page_size(page: Page):
         height = bounding_box["height"]
         log.info(f"页面大小: {width}x{height}")
         return (width, height)
-
-
