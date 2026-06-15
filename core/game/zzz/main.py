@@ -7,7 +7,10 @@ from . import zzz_utils, auto_attack
 
 async def main(page: Page, account: config._GameAccount):
     await goto_game_home(page, account)
+    await pyjs(page, account)
     await quick_book_daily_task(page, account)
+    await goto_game_home(page, account)
+    await ndcm_reward(page, account)
 
 
 @retry.retry(retry_count=600, raise_exception=True, raise_exception_error=Exception("没有找到星期，进入游戏超时"))
@@ -32,6 +35,7 @@ async def goto_game_home(page: Page, account: config._GameAccount):
         return True
 
     await zzz_utils.return_to_streets(page, ocr_output)
+
 
 @retry.retry(raise_exception_error=Exception("打开快捷手册超时"))
 async def open_quick_book(page: Page):
@@ -65,9 +69,6 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
     await push.screen_shot_and_push(page, account, "烟花任务完成")
     await zzz_utils.click_confirm(page)
     await close_kjsc(page)
-    await utils.sleep(page, 1)
-    await goto_game_home(page, account)
-    await ndcm_reward(page, account)
 
 
 async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
@@ -233,4 +234,7 @@ async def pyjs(page: Page, account: config._GameAccount):
             log.info("已到达目的地")
             break
         await utils.sleep(page, 1)
-        await auto_attack.auto_attack(page, account)
+
+        Auto_Attack = auto_attack.Auto_Attack(page, account)
+        await Auto_Attack.init()
+        await Auto_Attack.auto_attack()

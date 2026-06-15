@@ -19,7 +19,7 @@ def retry(retry_count_type: RetryCountType = RetryCountType.TIME, retry_count: i
                 if check_result(result):
                     return result
                 log.info(
-                    f"函数 {func.__name__} 返回值不符合规则，重试 ({int(time.time() - start_time)}/{retry_count}{"s" if retry_count_type == RetryCountType.TIME else ""})")
+                    f"函数 {func.__name__} 返回值 {result} 不符合规则，重试 ({int(time.time() - start_time)}/{retry_count}{"s" if retry_count_type == RetryCountType.TIME else ""})")
             error_msg = f"函数 {func.__name__} 在重试类型为 {retry_count_type} 的 {retry_count} 次重试内未能成功执行"
             log.error(error_msg)
             if raise_exception:

@@ -20,11 +20,10 @@ async def match_template(img_path: str, template_path: str, mask_path: str | Non
     return result
 
 
-async def match_template_from_matlike(img: cv2.typing.MatLike, template_img: cv2.typing.MatLike, mask_img: cv2.typing.MatLike | None = None, *, method: int = cv2.TM_CCOEFF_NORMED) -> types.CV_Result:
-    res = cv2.matchTemplate(
-        img, template_img, method, mask=mask_img)
+async def match_template_from_matlike(img: cv2.typing.MatLike, template: cv2.typing.MatLike, mask: cv2.typing.MatLike | None = None, *, method: int = cv2.TM_CCOEFF_NORMED) -> types.CV_Result:
+    res = cv2.matchTemplate(img, template, method, mask=mask)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-    height, width = template_img.shape[:2]
+    height, width = template.shape[:2]
     x, y = max_loc
     result = types.CV_Result(x=x, y=y, width=width,
                              height=height, score=max_val)
@@ -142,7 +141,7 @@ async def get_color_in_image(img_path: str):
     return avg_color
 
 
-async def classify_state_by_color_range[T](img_path: str, template_path: str, color_ranges: dict[T, tuple[int, int, int]]) -> T | None:
+async def classify_state_by_color_range[T](img_path: str, template_path: str, color_ranges: dict[T, tuple[float, float, float]]) -> T | None:
     """
     根据颜色分类状态
     color_ranges: {"未准备好": (B_range, G_range, R_range)}, ...}
@@ -155,13 +154,13 @@ async def classify_state_by_color_range[T](img_path: str, template_path: str, co
         return None
 
     for state, target_color in color_ranges.items():
-        if await match_color(color, target_color):
+        if await match_template_color(color, target_color):
             log.debug(f"根据颜色判断状态为: {state}")
             return state
     return None
 
 
-async def match_color(color, target_color: tuple[int, int, int], color_threshold: int = 30) -> bool:
+async def match_template_color(color, target_color: tuple[float, float, float], color_threshold: float = 30.0) -> bool:
     """
     判断ROI的颜色是否在目标颜色范围内
     target_color: (B, G, R)
@@ -184,9 +183,9 @@ async def match_color(color, target_color: tuple[int, int, int], color_threshold
 
 
 if __name__ == '__main__':
-    img_path = r"img\screenshot copy 20.png"
+    img_path = r"img\screenshotcopy20.png"
     template_path = r"core\template\attack\skill_ysg.png"
-    mask_path = r"core\template\tc_mask.png"
+    # mask_path = r"core\template\tc_mask.png"
     # img = cv2.imread(img_path, cv2.IMREAD_COLOR_BGR)
     # template_img = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
     # asyncio.run(generate_mask_image(template_path, mask_path))
@@ -195,11 +194,17 @@ if __name__ == '__main__':
     #     res = asyncio.run(match_template(img_path, template_path, method=i))
     #     print(f"Method {i}: {res}")
 
-    async def test_color_in_roi():
-        img, template_img, _ = await load_cv_img(img_path, template_path)
-        return await get_color_in_roi(img, template_img)
-    res = asyncio.run(test_color_in_roi())
-    print(res)
+    # async def test_color_in_roi():
+    #     img, template_img, _ = await load_cv_img(img_path, template_path)
+    #     return await get_color_in_roi(img, template_img)
+    # res = asyncio.run(test_color_in_roi())
+    # print(res)
+
+    for i in ["skill.png", "skill_ysg.png"]:
+        template_path = f"core/template/attack/{i}"
+        res = asyncio.run(match_template(img_path, template_path))
+        print(f"Template {i}: {res}")
+
     # threshold = 0.8
     # loc = np.where( res >= threshold)
     # for pt in zip(*loc[::-1]):
