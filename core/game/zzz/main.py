@@ -230,7 +230,7 @@ async def pyjs(page: Page, account: config._GameAccount):
         ocr_output = await utils.get_ocr(page)
         # game_status = await check_game_status(page, ocr_output)
         # if game_status == Game_Status.Street:
-        if await utils.match_ocr_txt(ocr_output, ["街区"]):
+        if await utils.match_ocr_txt(ocr_output, ["挑战等级"]):
             log.info("已到达目的地")
             break
         await utils.sleep(page, 1)
