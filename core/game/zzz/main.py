@@ -6,8 +6,8 @@ from . import zzz_utils, auto_attack
 
 
 async def main(page: Page, account: config._GameAccount):
-    await goto_game_home(page, account)
-    await pyjs(page, account)
+    # await goto_game_home(page, account)
+    # await pyjs(page, account)
     await quick_book_daily_task(page, account)
     await goto_game_home(page, account)
     await ndcm_reward(page, account)
