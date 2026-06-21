@@ -48,6 +48,7 @@ class Auto_Attack:
         while True:
             await self.check_battle_end()
             if self.attack_status == Attack_Status.End:
+                log.info("战斗结束，退出自动攻击")
                 break
             skill_status = await self.get_skill_status()
             if skill_status in [Skill_Status.Ready, Skill_Status.Ysg_Ready]:
