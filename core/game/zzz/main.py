@@ -142,6 +142,23 @@ async def quick_book_daily_task_divine(page: Page, account: config._GameAccount)
         await zzz_utils.click_confirm(page)
         await goto_game_home(page, account)
 
+async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount):
+    await open_quick_book(page)
+    ocr_output = await utils.get_ocr(page)
+    cookie_box = await utils.match_ocr_txt(ocr_output, ["抽取饼铺盲盒"])
+    if cookie_box:
+        box = cookie_box.box
+        res = utils.get_ocr_box_in_range_x(
+            ocr_output, (box[0][0], box[1][0]))
+        await utils.ocr_click_txts(page, res, ["前往"])
+        await zzz_utils.agree_teleport(page)
+        await zzz_utils.wait_for_teleport(page)
+        await zzz_utils.click_interaction(page)
+        await utils.sleep(page, 3)
+        await utils.click_cv_template_retry(page, "./core/template/zzz/daily/cookie.png")
+        await utils.sleep(page, 3)
+
+
 
 async def quick_book_daily_task_operate(page: Page, account: config._GameAccount):
     await open_quick_book(page)
