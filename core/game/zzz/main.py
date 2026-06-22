@@ -83,7 +83,8 @@ async def quick_book_daily_task_main(page: Page, index: int, account: config._Ga
                 await quick_book_daily_task_coffee(page, account)
 
         case 1:
-            await quick_book_daily_task_divine(page, account)
+            # await quick_book_daily_task_divine(page, account)
+            await quick_book_daily_task_cookie(page, account)
         case 2:
             await quick_book_daily_task_operate(page, account)
         case _:
@@ -146,6 +147,7 @@ async def quick_book_daily_task_divine(page: Page, account: config._GameAccount)
         await zzz_utils.click_confirm(page)
         await goto_game_home(page, account)
 
+
 async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount):
     await open_quick_book(page)
     ocr_output = await utils.get_ocr(page)
@@ -161,7 +163,19 @@ async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount)
         await utils.sleep(page, 3)
         await utils.click_cv_template_retry(page, "./core/template/zzz/daily/cookie.png")
         await utils.sleep(page, 3)
-
+        page_size = await utils.get_page_size(page)
+        if not page_size:
+            raise Exception("无法获取页面大小")
+        x, y = page_size
+        for i in range(5):
+            ocr_output = await utils.get_ocr(page)
+            if await utils.match_ocr_txts(ocr_output, ["点击盲盒"]):
+                break
+            await browser.click_video(page, x / 2, y / 2)
+        await zzz_utils.click_confirm(page)
+        await utils.sleep(page, 1)
+        await zzz_utils.click_confirm(page)
+        await goto_game_home(page, account)
 
 
 async def quick_book_daily_task_operate(page: Page, account: config._GameAccount):
@@ -175,6 +189,9 @@ async def quick_book_daily_task_operate(page: Page, account: config._GameAccount
         await utils.ocr_click_txts(page, res, ["前往"])
         await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
+        # 切换目标
+        await browser.get_video_element(page).press("d+w")
+        await utils.sleep(page, 1)
         # 点击交互按钮
         await zzz_utils.click_interaction(page)
         await utils.sleep(page, 3)
