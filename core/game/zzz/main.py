@@ -6,7 +6,7 @@ from . import zzz_utils, auto_attack
 
 
 async def main(page: Page, account: config._GameAccount):
-    # await goto_game_home(page, account)
+    await goto_game_home(page, account)
     # await pyjs(page, account)
     await quick_book_daily_task(page, account)
     await goto_game_home(page, account)
@@ -104,11 +104,11 @@ async def quick_book_daily_task_coffee(page: Page, account: config._GameAccount)
         res = utils.get_ocr_box_in_range_x(
             ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
-        await zzz_utils.agree_teleport(page)
+        # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
         await zzz_utils.click_interaction(page)
         await utils.sleep(page, 3)
-        await utils.ocr_click_txts_retry(page, ["想要喝点什么"])
+        await utils.ocr_click_txts_retry(page, ["喝点什么"])
         await utils.sleep(page, 1)
         await utils.ocr_click_txts_retry(page, ["汀曼特调"])
         await utils.sleep(page, 1)
@@ -127,7 +127,7 @@ async def quick_book_daily_task_divine(page: Page, account: config._GameAccount)
         res = utils.get_ocr_box_in_range_x(
             ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
-        await zzz_utils.agree_teleport(page)
+        # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
         await zzz_utils.click_interaction(page)
         await utils.sleep(page, 3)
@@ -160,7 +160,7 @@ async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount)
         res = utils.get_ocr_box_in_range_x(
             ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
-        await zzz_utils.agree_teleport(page)
+        # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
         await zzz_utils.click_interaction(page)
         await utils.sleep(page, 3)
@@ -176,8 +176,9 @@ async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount)
             #     break
             # await browser.click_video(page, x / 2, y / 2)
             ocr_output = await utils.get_ocr(page)
-            if not await utils.ocr_click_txts(page, res, ["点击盲盒"]):
+            if not await utils.ocr_click_txts(page, ocr_output, ["点击盲盒"]):
                 break
+            await utils.sleep(page, 1)
 
         await zzz_utils.click_confirm(page)
         await utils.sleep(page, 1)
@@ -194,7 +195,7 @@ async def quick_book_daily_task_operate(page: Page, account: config._GameAccount
         res = utils.get_ocr_box_in_range_x(
             ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
-        await zzz_utils.agree_teleport(page)
+        # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
         # 切换目标
         await browser.get_video_element(page).press("d+w")
@@ -202,6 +203,8 @@ async def quick_book_daily_task_operate(page: Page, account: config._GameAccount
         # 点击交互按钮
         await zzz_utils.click_interaction(page)
         await utils.sleep(page, 3)
+        await utils.ocr_click_txts_retry(page, ["看看今日的经营"])
+        await utils.sleep(page, 1)
         await utils.ocr_click_txts_retry(page, ["查看经营状况"])
         await utils.sleep(page, 3)
         await push.screen_shot_and_push(page, account, "开始录像店任务")
