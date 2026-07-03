@@ -12,29 +12,32 @@ async def main(page: Page, account: config._GameAccount):
     await goto_game_home(page, account)
     await ndcm_reward(page, account)
 
-
-@retry.retry(retry_count=600, raise_exception=True, raise_exception_error=Exception("没有找到星期，进入游戏超时"))
+# @retry.retry(retry_count=600, raise_exception=True, raise_exception_error=Exception("没有找到星期，进入游戏超时"))
 async def goto_game_home(page: Page, account: config._GameAccount):
-    ocr_output = await utils.get_ocr(page)
-    await utils.ocr_click_txts(page, ocr_output, ["点击进入游戏", "进入游戏", "点击登录", "重新登录"])
-    await utils.ocr_click_txts(page, ocr_output, ["确定", "确认"], exact=True)
-    if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
-        log.info("领取月卡奖励")
-        await push.screen_shot_and_push(page, account, "月卡奖励")
-    elif await utils.match_ocr_txt(ocr_output, ["网络请求错误"]):
-        log.warning("网络请求错误，尝试点击重试")
-        await utils.ocr_click_txts(page, ocr_output, ["重试"], exact=True)
-    elif await utils.ocr_click_txts(page, ocr_output, ["用户协议和隐私政策"], exact=True):
-        log.info("尝试同意用户协议和隐私政策")
-        for _ in range(3):
-            await utils.click_cv_template_retry(page, "./core/template/agree_yhxy.png")
-            await utils.sleep(page, 1)
-        await utils.ocr_click_txts_retry(page, ["接受"], exact=True)
-    if await zzz_utils.is_in_street(ocr_output):
-        log.info("已到达街区")
-        return True
+    for i in range(300):
+        log.debug(f"第 {i} 次, 检查街区")
+        ocr_output = await utils.get_ocr(page)
+        await utils.ocr_click_txts(page, ocr_output, ["点击进入游戏", "进入游戏", "点击登录", "重新登录"])
+        await utils.ocr_click_txts(page, ocr_output, ["确定", "确认"], exact=True)
+        if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
+            log.info("领取月卡奖励")
+            await push.screen_shot_and_push(page, account, "月卡奖励")
+        elif await utils.match_ocr_txt(ocr_output, ["网络请求错误"]):
+            log.warning("网络请求错误，尝试点击重试")
+            await utils.ocr_click_txts(page, ocr_output, ["重试"], exact=True)
+        elif await utils.ocr_click_txts(page, ocr_output, ["用户协议和隐私政策"], exact=True):
+            log.info("尝试同意用户协议和隐私政策")
+            for _ in range(3):
+                await utils.click_cv_template_retry(page, "./core/template/agree_yhxy.png")
+                await utils.sleep(page, 1)
+            await utils.ocr_click_txts_retry(page, ["接受"], exact=True)
+        if await zzz_utils.is_in_street(ocr_output):
+            log.info("已到达街区")
+            return True
 
-    await zzz_utils.return_to_streets(page, ocr_output)
+        await zzz_utils.return_to_streets(page, ocr_output)
+    
+    raise Exception("找不到街区")
 
 
 @retry.retry(raise_exception_error=Exception("打开快捷手册超时"))
@@ -168,10 +171,14 @@ async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount)
             raise Exception("无法获取页面大小")
         x, y = page_size
         for i in range(5):
+            # ocr_output = await utils.get_ocr(page)
+            # if await utils.match_ocr_txts(ocr_output, ["点击盲盒"]):
+            #     break
+            # await browser.click_video(page, x / 2, y / 2)
             ocr_output = await utils.get_ocr(page)
-            if await utils.match_ocr_txts(ocr_output, ["点击盲盒"]):
+            if not await utils.ocr_click_txts(page, res, ["点击盲盒"]):
                 break
-            await browser.click_video(page, x / 2, y / 2)
+
         await zzz_utils.click_confirm(page)
         await utils.sleep(page, 1)
         await zzz_utils.click_confirm(page)

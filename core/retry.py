@@ -10,7 +10,7 @@ class RetryCountType(StrEnum):
     NUM = "num"
 
 
-def retry(retry_count_type: RetryCountType = RetryCountType.TIME, retry_count: int = 30, check_result: Callable[[Any], bool] = bool, raise_exception: bool = True, raise_exception_error: Exception | None = None):
+def retry(retry_count_type: RetryCountType = RetryCountType.TIME, retry_count: int = 30, check_result: Callable[[Any], bool] = bool, raise_exception: bool = False, raise_exception_error: Exception | None = None):
     def decorator(func):
         async def wrapper(*args, **kwargs):
             start_time = time.time()

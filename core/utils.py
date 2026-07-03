@@ -59,6 +59,17 @@ async def ocr_clicks_txts(page: Page, ocr_output: types.OCR_Results, match_txts:
         await browser.click_video(page, x, y)
     return results
 
+async def wait_txts_appear(page: Page, match_txts: list[str], exact: bool | None = None, retry_count_type: retry.RetryCountType = retry.RetryCountType.TIME, retry_count: int = 30, retry_interval: float = 1):
+    @retry.retry(retry_count_type=retry_count_type, retry_count=retry_count)
+    async def wait_once():
+        ocr_output = await get_ocr(page)
+        result = await match_ocr_txts(ocr_output, match_txts, exact)
+        if len(result) > 0:
+            return result
+        log.info(f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试")
+        await sleep(page, retry_interval)
+    return await wait_once()
+
 
 async def ocr_click_txts_retry_old(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None, retry_nums: int = 3, retry_interval: float = 1):
     for i in range(retry_nums):
