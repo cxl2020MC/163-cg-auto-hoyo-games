@@ -87,7 +87,7 @@ async def ocr_click_txts_retry_old(page: Page, match_txts: list[str], ocr_output
 
 async def ocr_click_txts_retry(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None,
                                retry_type: retry.RetryCountType = retry.RetryCountType.TIME,
-                               retry_count: int = 3,
+                               retry_count: int = 30,
                                retry_interval: float = 1):
     @retry.retry(retry_count_type=retry_type, retry_count=retry_count)
     async def click_once():
@@ -163,7 +163,7 @@ async def click_cv_template_retry_old(page: Page, template_path: str, threshold:
 
 async def click_cv_template_retry(page: Page, template_path: str, threshold: float = 0.75,
                                      retry_count_type: retry.RetryCountType = retry.RetryCountType.TIME,
-                                     retry_count: int = 5, retry_interval: int = 1):
+                                     retry_count: int = 15, retry_interval: int = 1):
     @retry.retry(retry_count_type=retry_count_type, retry_count=retry_count)
     async def click_once():
         await browser.screen_shot(page)
