@@ -40,12 +40,11 @@ async def goto_game_home(page: Page, account: config._GameAccount):
     raise Exception("找不到街区")
 
 
-@retry.retry(raise_exception_error=Exception("打开快捷手册超时"))
-async def open_quick_book(page: Page):
+@retry.retry(raise_exception=True, raise_exception_error=Exception("打开快捷手册超时"))
+async def open_quick_book(page: Page, quick_book_tab: str | None = None):
     ocr_output = await utils.get_ocr(page)
-    # if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
-    if len(await utils.match_ocr_txts(ocr_output, ["日常", "目标", "训练"], exact=True)) >= 2:
-
+    if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
+    # if len(await utils.match_ocr_txts(ocr_output, ["日常", "目标", "训练"], exact=True)) >= 2:
         log.info("当前正在快捷手册页面")
         if not await utils.match_ocr_txt(ocr_output, ["活跃度"]):
             await utils.ocr_click_txts(page, ocr_output, ["日常"])
@@ -72,6 +71,7 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
     await push.screen_shot_and_push(page, account, "烟花任务完成")
     await zzz_utils.click_confirm(page)
     await close_kjsc(page)
+    await utils.sleep(page, 2)
 
 
 async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
@@ -166,10 +166,6 @@ async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount)
         await utils.sleep(page, 3)
         await utils.click_cv_template_retry(page, "./core/template/zzz/daily/cookie.png")
         await utils.sleep(page, 3)
-        page_size = await utils.get_page_size(page)
-        if not page_size:
-            raise Exception("无法获取页面大小")
-        x, y = page_size
         for i in range(5):
             # ocr_output = await utils.get_ocr(page)
             # if await utils.match_ocr_txts(ocr_output, ["点击盲盒"]):
