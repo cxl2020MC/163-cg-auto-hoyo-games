@@ -13,6 +13,8 @@ async def main(page: Page, account: config._GameAccount):
     await ndcm_reward(page, account)
 
 # @retry.retry(retry_count=600, raise_exception=True, raise_exception_error=Exception("没有找到星期，进入游戏超时"))
+
+
 async def goto_game_home(page: Page, account: config._GameAccount):
     for i in range(300):
         log.debug(f"第 {i} 次, 检查街区")
@@ -36,7 +38,7 @@ async def goto_game_home(page: Page, account: config._GameAccount):
             return True
 
         await zzz_utils.return_to_streets(page, ocr_output)
-    
+
     raise Exception("找不到街区")
 
 
@@ -44,7 +46,7 @@ async def goto_game_home(page: Page, account: config._GameAccount):
 async def open_quick_book(page: Page, quick_book_tab: str | None = None):
     ocr_output = await utils.get_ocr(page)
     if await utils.match_ocr_txt(ocr_output, ["QUICK"]):
-    # if len(await utils.match_ocr_txts(ocr_output, ["日常", "目标", "训练"], exact=True)) >= 2:
+        # if len(await utils.match_ocr_txts(ocr_output, ["日常", "目标", "训练"], exact=True)) >= 2:
         log.info("当前正在快捷手册页面")
         if not await utils.match_ocr_txt(ocr_output, ["活跃度"]):
             await utils.ocr_click_txts(page, ocr_output, ["日常"])
@@ -71,7 +73,6 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
     await push.screen_shot_and_push(page, account, "烟花任务完成")
     await zzz_utils.click_confirm(page)
     await close_kjsc(page)
-    await utils.sleep(page, 2)
 
 
 async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
@@ -245,7 +246,9 @@ async def ndcm_reward(page: Page, account: config._GameAccount):
 
 
 async def close_kjsc(page: Page):
-    return await utils.click_cv_template_retry(page, "./core/template/kjsc_tc.png")
+    result = await utils.click_cv_template_retry(page, "./core/template/kjsc_tc.png")
+    await utils.sleep(page, 2)
+    return result
 
 
 async def open_function(page: Page, function_name: str):
