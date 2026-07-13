@@ -13,41 +13,76 @@ from .log import logger as log
 #     return res
 
 
-async def match_template(img_path: str, template_path: str, mask_path: str | None = None, *, flag: int = cv2.IMREAD_COLOR, method: int = cv2.TM_CCOEFF_NORMED) -> types.CV_Result:
-    img, template_img, mask_img = await load_cv_img(img_path, template_path, mask_path, flag=flag)
-    result = await match_template_from_matlike(img, template_img, mask_img, method=method)
+async def match_template(
+    img_path: str,
+    template_path: str,
+    mask_path: str | None = None,
+    *,
+    flag: int = cv2.IMREAD_COLOR,
+    method: int = cv2.TM_CCOEFF_NORMED,
+) -> types.CV_Result:
+    img, template_img, mask_img = await load_cv_img(
+        img_path, template_path, mask_path, flag=flag
+    )
+    result = await match_template_from_matlike(
+        img, template_img, mask_img, method=method
+    )
     log.debug(f"图片 {template_path} 模板匹配结果：{result}")
     return result
 
 
-async def match_template_from_matlike(img: cv2.typing.MatLike, template: cv2.typing.MatLike, mask: cv2.typing.MatLike | None = None, *, method: int = cv2.TM_CCOEFF_NORMED) -> types.CV_Result:
+async def match_template_from_matlike(
+    img: cv2.typing.MatLike,
+    template: cv2.typing.MatLike,
+    mask: cv2.typing.MatLike | None = None,
+    *,
+    method: int = cv2.TM_CCOEFF_NORMED,
+) -> types.CV_Result:
     res = cv2.matchTemplate(img, template, method, mask=mask)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
     height, width = template.shape[:2]
     x, y = max_loc
-    result = types.CV_Result(x=x, y=y, width=width,
-                             height=height, score=max_val)
-    await asyncio.to_thread(cv2.rectangle, img, max_loc, (max_loc[0] + width, max_loc[1] + height), (0, 0, 255), 1)
-    await asyncio.to_thread(cv2.imwrite, 'img/cv_res.png', img)
+    result = types.CV_Result(x=x, y=y, width=width, height=height, score=max_val)
+    await asyncio.to_thread(
+        cv2.rectangle,
+        img,
+        max_loc,
+        (max_loc[0] + width, max_loc[1] + height),
+        (0, 0, 255),
+        1,
+    )
+    await asyncio.to_thread(cv2.imwrite, "img/cv_res.png", img)
     log.debug(f"模板匹配结果: {result}")
     return result
 
 
-async def match_template2(img_path: str, template_path: str, mask_path: str | None = None):
+async def match_template2(
+    img_path: str, template_path: str, mask_path: str | None = None
+):
     img = await asyncio.to_thread(cv2.imread, img_path, cv2.IMREAD_COLOR_BGR)
-    template_img = await asyncio.to_thread(cv2.imread, template_path, cv2.IMREAD_COLOR_BGR)
-    mask_img = await asyncio.to_thread(cv2.imread, mask_path, cv2.IMREAD_GRAYSCALE) if mask_path else None
+    template_img = await asyncio.to_thread(
+        cv2.imread, template_path, cv2.IMREAD_COLOR_BGR
+    )
+    mask_img = (
+        await asyncio.to_thread(cv2.imread, mask_path, cv2.IMREAD_GRAYSCALE)
+        if mask_path
+        else None
+    )
 
     assert img is not None
     assert template_img is not None
-    res = cv2.matchTemplate(
-        img, template_img, cv2.TM_CCOEFF_NORMED, mask=mask_img)
+    res = cv2.matchTemplate(img, template_img, cv2.TM_CCOEFF_NORMED, mask=mask_img)
     threshold = 0.8
     loc = np.where(res >= threshold)
     for pt in zip(*loc[::-1]):
-        cv2.rectangle(img, pt, (pt[0] + template_img.shape[1],
-                      pt[1] + template_img.shape[0]), (0, 0, 255), 2)
-    cv2.imwrite('res.png', img)
+        cv2.rectangle(
+            img,
+            pt,
+            (pt[0] + template_img.shape[1], pt[1] + template_img.shape[0]),
+            (0, 0, 255),
+            2,
+        )
+    cv2.imwrite("res.png", img)
     # height, width = template_img.shape[:2]
     # x, y = max_loc
     # result = types.CV_Result(x=x, y=y, width=width, height=height, score=max_val)
@@ -58,8 +93,12 @@ async def match_template2(img_path: str, template_path: str, mask_path: str | No
 async def generate_mask_image(img_path: str, output_path: str):
     img = await asyncio.to_thread(cv2.imread, img_path, cv2.IMREAD_COLOR_BGR)
     assert img is not None
-    masked_img = cv2.threshold(cv2.cvtColor(
-        img, cv2.COLOR_BGR2GRAY), 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    masked_img = cv2.threshold(
+        cv2.cvtColor(img, cv2.COLOR_BGR2GRAY),
+        0,
+        255,
+        cv2.THRESH_BINARY | cv2.THRESH_OTSU,
+    )[1]
     await asyncio.to_thread(cv2.imwrite, output_path, masked_img)
 
 
@@ -69,13 +108,24 @@ async def load_image(img_path: str, flag: int = cv2.IMREAD_COLOR):
     return img
 
 
-async def load_cv_img(img_path: str, template_path: str, mask_path: str | None = None, *, flag: int = cv2.IMREAD_COLOR):
+async def load_cv_img(
+    img_path: str,
+    template_path: str,
+    mask_path: str | None = None,
+    *,
+    flag: int = cv2.IMREAD_COLOR,
+):
     img = await asyncio.to_thread(cv2.imread, img_path, flag)
     template_img = await asyncio.to_thread(cv2.imread, template_path, flag)
-    mask_img = await asyncio.to_thread(cv2.imread, mask_path, cv2.IMREAD_GRAYSCALE) if mask_path else None
+    mask_img = (
+        await asyncio.to_thread(cv2.imread, mask_path, cv2.IMREAD_GRAYSCALE)
+        if mask_path
+        else None
+    )
     assert img is not None
     assert template_img is not None
     return img, template_img, mask_img
+
 
 # async def detect_skill_by_shape(img_path: str, template_path: str) -> tuple[bool, int, int]:
 #     """
@@ -127,7 +177,7 @@ async def get_color_in_roi(img: cv2.typing.MatLike, template_img: cv2.typing.Mat
         return None
 
     h, w = cv_result.height, cv_result.width
-    roi = img[cv_result.y:cv_result.y+h, cv_result.x:cv_result.x+w]
+    roi = img[cv_result.y : cv_result.y + h, cv_result.x : cv_result.x + w]
 
     # 计算ROI的平均颜色
     avg_color = cv2.mean(roi)[:3]  # 获取BGR三通道
@@ -141,7 +191,9 @@ async def get_color_in_image(img_path: str):
     return avg_color
 
 
-async def classify_state_by_color_range[T](img_path: str, template_path: str, color_ranges: dict[T, tuple[float, float, float]]) -> T | None:
+async def classify_state_by_color_range[T](
+    img_path: str, template_path: str, color_ranges: dict[T, tuple[float, float, float]]
+) -> T | None:
     """
     根据颜色分类状态
     color_ranges: {"未准备好": (B_range, G_range, R_range)}, ...}
@@ -160,7 +212,9 @@ async def classify_state_by_color_range[T](img_path: str, template_path: str, co
     return None
 
 
-async def match_template_color(color, target_color: tuple[float, float, float], color_threshold: float = 30.0) -> bool:
+async def match_template_color(
+    color, target_color: tuple[float, float, float], color_threshold: float = 30.0
+) -> bool:
     """
     判断ROI的颜色是否在目标颜色范围内
     target_color: (B, G, R)
@@ -170,19 +224,23 @@ async def match_template_color(color, target_color: tuple[float, float, float], 
     b, g, r = color
     target_b, target_g, target_r = target_color
 
-    if (abs(b - target_b) <= color_threshold and
-        abs(g - target_g) <= color_threshold and
-            abs(r - target_r) <= color_threshold):
+    if (
+        abs(b - target_b) <= color_threshold
+        and abs(g - target_g) <= color_threshold
+        and abs(r - target_r) <= color_threshold
+    ):
         log.debug(
-            f"颜色匹配成功: 目标BGR({target_b},{target_g},{target_r}), 实际BGR({b},{g},{r})")
+            f"颜色匹配成功: 目标BGR({target_b},{target_g},{target_r}), 实际BGR({b},{g},{r})"
+        )
         return True
 
     log.warning(
-        f"颜色匹配失败: 目标BGR({target_b},{target_g},{target_r}), 实际BGR({b},{g},{r})")
+        f"颜色匹配失败: 目标BGR({target_b},{target_g},{target_r}), 实际BGR({b},{g},{r})"
+    )
     return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     img_path = r"img\screenshotcopy20.png"
     template_path = r"core\template\attack\skill_ysg.png"
     # mask_path = r"core\template\tc_mask.png"

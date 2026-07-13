@@ -23,7 +23,7 @@ async def check_login(page: Page):
 async def auto_login(page: Page, phone, password):
     # await page.get_by_role("banner").get_by_text("登录").dispatch_event('click')
     await page.get_by_placeholder("手机号").fill(phone)
-    await page.get_by_text("密码登录").first.dispatch_event('click')
+    await page.get_by_text("密码登录").first.dispatch_event("click")
     await page.get_by_placeholder("密码").fill(password)
     await page.get_by_role("button", name="登录").click()
     # await page.get_by_role("link", name="同意").click()
@@ -56,14 +56,23 @@ async def launch_game(page: Page, game_code: str):
     # add_background_task(check_cg_game_home_activity(page), "check_cg_game_home_activity")
     # add_background_task(check_cg_game_key_position(page), "check_cg_game_key_position")
     add_background_task(check_cg_game_activity_v2(page), "check_cg_game_activity_v2")
-    add_background_task(check_cg_game_home_activity_v2(page), "check_cg_game_home_activity_v2")
-    add_background_task(check_cg_game_key_position_v2(page), "check_cg_game_key_position_v2")
-    add_background_task(select_cg_server_run_game_normal_mode(page), "select_cg_server_run_game_normal_mode")
+    add_background_task(
+        check_cg_game_home_activity_v2(page), "check_cg_game_home_activity_v2"
+    )
+    add_background_task(
+        check_cg_game_key_position_v2(page), "check_cg_game_key_position_v2"
+    )
+    add_background_task(
+        select_cg_server_run_game_normal_mode(page),
+        "select_cg_server_run_game_normal_mode",
+    )
     add_background_task(agree_exit_cg_game(page), "agree_exit_cg_game")
+
 
 async def click_locator(locator: Locator):
     # return await locator.click()
-    return await locator.dispatch_event('click')
+    return await locator.dispatch_event("click")
+
 
 async def check_cg_game_activity(page: Page):
     log.debug("检查云游戏活动")
@@ -139,7 +148,6 @@ async def check_cg_game_home_activity_v2(page: Page):
         log.info("发现云游戏主页活动，尝试关闭")
         await page.evaluate('() => document.querySelector("div.slide").remove()')
 
-
     return home_activity_status
 
 
@@ -174,8 +182,8 @@ async def check_cg_game_key_position_v2(page: Page):
         log.info("发现云游戏按键位置页面，尝试关闭")
         await page.evaluate('() => document.querySelector("div.keylayout").remove()')
 
-
     return key_position_status
+
 
 async def select_cg_server_run_game_normal_mode(page: Page):
     try:
@@ -216,7 +224,10 @@ def add_background_task(corn: Coroutine[Any, Any, Any], task_name: str | None = 
     asyncio_task = asyncio.create_task(corn)
     if task_name:
         asyncio_task.set_name(task_name)
-    log.info(f"添加后台任务: {asyncio_task.get_name()} ，当前后台任务数量: {len(background_task)+1}")
+    log.info(
+        f"添加后台任务: {asyncio_task.get_name()} ，当前后台任务数量: {len(background_task) + 1}"
+    )
+
     def task_done_callback(t: asyncio.Task):
         background_task.discard(t)
         try:
@@ -224,7 +235,12 @@ def add_background_task(corn: Coroutine[Any, Any, Any], task_name: str | None = 
         except Exception:
             log.error(f"后台任务 {t.get_name()} 发生异常: {traceback.format_exc()}")
         else:
-            log.info(f"后台任务 {t.get_name()} 已完成，当前后台任务列表: {[t.get_name() for t in background_task]}")
+            log.info(
+                f"后台任务 {t.get_name()} 已完成，当前后台任务列表: {[t.get_name() for t in background_task]}"
+            )
+
     asyncio_task.add_done_callback(task_done_callback)
     background_task.add(asyncio_task)
-    log.debug(f"添加后台任务 {asyncio_task.get_name()} 已完成，当前后台任务列表: {[t.get_name() for t in background_task]}")
+    log.debug(
+        f"添加后台任务 {asyncio_task.get_name()} 已完成，当前后台任务列表: {[t.get_name() for t in background_task]}"
+    )

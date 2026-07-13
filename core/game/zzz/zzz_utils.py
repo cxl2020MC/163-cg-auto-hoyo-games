@@ -32,7 +32,7 @@ async def check_game_status(page: Page, ocr_result: types.OCR_Results):
 
 
 # 返回街区
-async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
+async def return_to_streets(page: Page, ocr_result: types.OCR_Results | None = None):
     cv_reslt = await utils.match_screenshot_cv_template("./core/template/tc.png", 0.65)
     if cv_reslt:
         cv_box_center = utils.get_cv_box_center(cv_reslt)
@@ -40,7 +40,19 @@ async def return_to_streets(page: Page, ocr_result: types.OCR_Results):
         x, y = cv_box_center
         await browser.click_video(page, x, y)
     else:
+        ocr_result = await utils.get_ocr(page, ocr_result)
         await utils.ocr_click_txts(page, ocr_result, ["X", "x"])
+
+
+async def return_to_streets_retry(page: Page):
+    for i in range(30):
+        log.info(f"第 {i + 1} 次尝试返回街区")
+        ocr_result = await utils.get_ocr(page)
+        if await is_in_street(ocr_result):
+            return True
+        else:
+            await return_to_streets(page, None)
+            await utils.sleep(page, 1)
 
 
 async def is_in_street(ocr_result: types.OCR_Results):
@@ -75,7 +87,7 @@ async def click_confirm(page: Page, ocr_output: types.OCR_Results | None = None)
 async def click_interaction(page: Page):
     for i in range(5):
         await browser.screen_shot(page)
-        log.debug(f"第{i+1}次检查交互按钮")
+        log.debug(f"第{i + 1}次检查交互按钮")
         if await utils.click_cv_template(page, "./core/template/jh.png"):
             return True
         await utils.sleep(page, 1)

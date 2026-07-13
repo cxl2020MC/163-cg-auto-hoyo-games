@@ -18,9 +18,7 @@ async def _onebot_v11_push_message(group_id: int, message: str):
     async with aiohttp.ClientSession() as session:
         async with session.post(
             f"{config.config.push_url}/send_group_msg",
-            headers={
-                "Authorization": f"Bearer {config.config.push_token}"
-            },
+            headers={"Authorization": f"Bearer {config.config.push_token}"},
             json={
                 "token": config.config.push_token,
                 "group_id": group_id,
@@ -45,10 +43,12 @@ async def push_message(group_id: int | None, title: str, content: str):
             exc = traceback.format_exc()
             log.error(f"推送消息失败: {exc}")
 
+
 async def add_message(group_id: int | None, title: str, content: str):
     task = asyncio.create_task(push_message(group_id, title, content))
     message_push_tasks.append(task)
     log.info(f"消息推送已添加到队列，当前队列长度: {len(message_push_tasks)}")
+
 
 async def wait_all_messages_push():
     log.info(f"等待所有后台消息推送完成，当前队列长度: {len(message_push_tasks)}")
@@ -67,6 +67,7 @@ async def screen_shot_and_push(page: Page, account: config._GameAccount, content
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     content = f"{content}\n{img_cqcode}\n{time_str}"
     await add_message(account.group_id, title, content)
+
 
 async def push_video(account: config._GameAccount, content: str, video_path: Path):
     log.info("进行视频消息推送")

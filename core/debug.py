@@ -12,7 +12,11 @@ async def main():
     input_game = await asyncio.to_thread(input, f"请输入要运行的游戏: ")
     input_server = await asyncio.to_thread(input, f"请输入要运行的服务器: ")
     for account in accounts:
-        if str(account.id) != input_id or account.game != input_game or account.server != input_server:
+        if (
+            str(account.id) != input_id
+            or account.game != input_game
+            or account.server != input_server
+        ):
             log.info(f"跳过账号: {account}")
             continue
         log.info(f"处理账号: {account}")
@@ -23,4 +27,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

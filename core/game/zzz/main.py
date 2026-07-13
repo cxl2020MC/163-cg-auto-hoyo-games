@@ -12,6 +12,7 @@ async def main(page: Page, account: config._GameAccount):
     await goto_game_home(page, account)
     await ndcm_reward(page, account)
 
+
 # @retry.retry(retry_count=600, raise_exception=True, raise_exception_error=Exception("没有找到星期，进入游戏超时"))
 
 
@@ -19,7 +20,9 @@ async def goto_game_home(page: Page, account: config._GameAccount):
     for i in range(300):
         log.debug(f"第 {i} 次, 检查街区")
         ocr_output = await utils.get_ocr(page)
-        await utils.ocr_click_txts(page, ocr_output, ["点击进入游戏", "进入游戏", "点击登录", "重新登录"])
+        await utils.ocr_click_txts(
+            page, ocr_output, ["点击进入游戏", "进入游戏", "点击登录", "重新登录"]
+        )
         await utils.ocr_click_txts(page, ocr_output, ["确定", "确认"], exact=True)
         if await utils.ocr_click_txts(page, ocr_output, ["今日到账", "惊喜补给"]):
             log.info("领取月卡奖励")
@@ -27,10 +30,14 @@ async def goto_game_home(page: Page, account: config._GameAccount):
         elif await utils.match_ocr_txt(ocr_output, ["网络请求错误"]):
             log.warning("网络请求错误，尝试点击重试")
             await utils.ocr_click_txts(page, ocr_output, ["重试"], exact=True)
-        elif await utils.ocr_click_txts(page, ocr_output, ["用户协议和隐私政策"], exact=True):
+        elif await utils.ocr_click_txts(
+            page, ocr_output, ["用户协议和隐私政策"], exact=True
+        ):
             log.info("尝试同意用户协议和隐私政策")
             for _ in range(3):
-                await utils.click_cv_template_retry(page, "./core/template/agree_yhxy.png")
+                await utils.click_cv_template_retry(
+                    page, "./core/template/agree_yhxy.png"
+                )
                 await utils.sleep(page, 1)
             await utils.ocr_click_txts_retry(page, ["接受"], exact=True)
         if await zzz_utils.is_in_street(ocr_output):
@@ -75,11 +82,14 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
     await close_kjsc(page)
 
 
-async def quick_book_daily_task_main(page: Page, index: int, account: config._GameAccount):
+async def quick_book_daily_task_main(
+    page: Page, index: int, account: config._GameAccount
+):
     match index:
         case 0:
             account_game_config = config.get_account_game_config(
-                account, config.ZZZGameConfig)
+                account, config.ZZZGameConfig
+            )
             if account_game_config and not account_game_config.cofee:
                 log.info("跳过咖啡任务")
                 return
@@ -102,8 +112,7 @@ async def quick_book_daily_task_coffee(page: Page, account: config._GameAccount)
     cofee_box = await utils.match_ocr_txt(ocr_output, ["次咖啡"])
     if cofee_box:
         box = cofee_box.box
-        res = utils.get_ocr_box_in_range_x(
-            ocr_output, (box[0][0], box[1][0]))
+        res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
         # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
@@ -125,8 +134,7 @@ async def quick_book_daily_task_divine(page: Page, account: config._GameAccount)
     divine_box = await utils.match_ocr_txt(ocr_output, ["次占卜"])
     if divine_box:
         box = divine_box.box
-        res = utils.get_ocr_box_in_range_x(
-            ocr_output, (box[0][0], box[1][0]))
+        res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
         # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
@@ -142,7 +150,11 @@ async def quick_book_daily_task_divine(page: Page, account: config._GameAccount)
             if await utils.match_ocr_txt(ocr_output, ["滑动屏幕"]):
                 page_size = await utils.get_page_size(page)
                 if page_size:
-                    await utils.drag(page, (page_size[0]*0.1, page_size[1]/2), (page_size[0]*0.9, page_size[1]/2))
+                    await utils.drag(
+                        page,
+                        (page_size[0] * 0.1, page_size[1] / 2),
+                        (page_size[0] * 0.9, page_size[1] / 2),
+                    )
             else:
                 break
         await zzz_utils.click_confirm(page)
@@ -158,14 +170,15 @@ async def quick_book_daily_task_cookie(page: Page, account: config._GameAccount)
     cookie_box = await utils.match_ocr_txt(ocr_output, ["抽取饼铺盲盒"])
     if cookie_box:
         box = cookie_box.box
-        res = utils.get_ocr_box_in_range_x(
-            ocr_output, (box[0][0], box[1][0]))
+        res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
         # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)
         await zzz_utils.click_interaction(page)
         await utils.sleep(page, 3)
-        await utils.click_cv_template_retry(page, "./core/template/zzz/daily/cookie.png")
+        await utils.click_cv_template_retry(
+            page, "./core/template/zzz/daily/cookie.png"
+        )
         await utils.sleep(page, 3)
         for i in range(5):
             # ocr_output = await utils.get_ocr(page)
@@ -189,8 +202,7 @@ async def quick_book_daily_task_operate(page: Page, account: config._GameAccount
     operate_box = await utils.match_ocr_txt(ocr_output, ["今日录像店经营"])
     if operate_box:
         box = operate_box.box
-        res = utils.get_ocr_box_in_range_x(
-            ocr_output, (box[0][0], box[1][0]))
+        res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
         await utils.ocr_click_txts(page, res, ["前往"])
         # await zzz_utils.agree_teleport(page)
         await zzz_utils.wait_for_teleport(page)

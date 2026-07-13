@@ -61,7 +61,9 @@ async def open_quick_book(page: Page):
 
 
 async def toggle_quick_book_to_scsy_page(page: Page):
-    result = await utils.click_cv_template_retry(page, "./core/template/hsr/kjsc_scsy.png")
+    result = await utils.click_cv_template_retry(
+        page, "./core/template/hsr/kjsc_scsy.png"
+    )
     # if await switch_quick_book_task(page, "累计消耗120点"):
     #     await utils.sleep(page, 1)
     #     await utils.ocr_click_txts_retry(page, ["培养目标"])
@@ -81,7 +83,7 @@ async def daily_entrust(page: Page, account: config._GameAccount):
     await open_entrust(page)
     for i in range(5):
         ocr_output = await utils.get_ocr(page)
-        log.debug(f"第{i+1}次检查领取奖励")
+        log.debug(f"第{i + 1}次检查领取奖励")
         if await utils.ocr_click_txts(page, ocr_output, ["领取奖励"], exact=True):
             await utils.sleep(page, 2)
             await push.screen_shot_and_push(page, account, "今日委托")
@@ -109,14 +111,16 @@ async def close(page: Page):
 
 
 async def auto_attack(page: Page, account: config._GameAccount):
-    add_btn_pos = await utils.click_cv_template_retry(page, "./core/template/hsr/add_number.png")
+    add_btn_pos = await utils.click_cv_template_retry(
+        page, "./core/template/hsr/add_number.png"
+    )
     if not add_btn_pos:
         # log.error("没有找到增加次数按钮，无法进行自动战斗")
         raise Exception("没有找到增加次数按钮，无法进行自动战斗")
 
     for i in range(1, 24):
         await browser.click_video(page, *add_btn_pos)
-        log.info(f"第 {i+1} 次点击增加次数按钮")
+        log.info(f"第 {i + 1} 次点击增加次数按钮")
     await utils.ocr_click_txts_retry(page, ["挑战"], exact=True)
     await utils.sleep(page, 2)
     await utils.ocr_click_txts_retry(page, ["开始挑战"], exact=True)
@@ -125,7 +129,9 @@ async def auto_attack(page: Page, account: config._GameAccount):
         ocr_output = await utils.get_ocr(page)
         if await utils.match_ocr_txt(ocr_output, ["单攻", "群攻"]):
             log.info("自动战斗可能未开启，尝试开启自动战斗")
-            await utils.click_cv_template_retry(page, "./core/template/hsr/open_auto_attack.png")
+            await utils.click_cv_template_retry(
+                page, "./core/template/hsr/open_auto_attack.png"
+            )
         if await utils.match_ocr_txt(ocr_output, ["挑战失败", "挑战成功"]):
             log.info("挑战已结束")
             await push.screen_shot_and_push(page, account, "挑战结果")
@@ -140,7 +146,7 @@ async def reward_mrwt(page: Page, account: config._GameAccount):
     # await open_quick_book(page)
     for i in range(6):
         ocr_output = await utils.get_ocr(page)
-        log.debug(f"第 {i+1} 次检查领取每日奖励")
+        log.debug(f"第 {i + 1} 次检查领取每日奖励")
         if await utils.ocr_click_txts(page, ocr_output, ["领取"], exact=True):
             log.info("找到每日委托奖励")
             break
@@ -154,13 +160,15 @@ async def reward_daily_task(page: Page, account: config._GameAccount):
     await open_quick_book(page)
     for i in range(4):
         ocr_output = await utils.get_ocr(page)
-        log.debug(f"第 {i+1} 次检查领取每日奖励")
+        log.debug(f"第 {i + 1} 次检查领取每日奖励")
         if await utils.ocr_click_txts(page, ocr_output, ["领取"], exact=True):
             log.info("找到每日委托奖励")
             await utils.sleep(page, 0.5)
     await utils.sleep(page, 1)
     await browser.screen_shot(page)
-    await utils.click_cv_template_retry(page, "./core/template/hsr/daily_task_reward.png")
+    await utils.click_cv_template_retry(
+        page, "./core/template/hsr/daily_task_reward.png"
+    )
     await confirm_to_receive_reward(page)
     await push.screen_shot_and_push(page, account, "领取每日委托奖励")
 
@@ -170,6 +178,5 @@ async def switch_quick_book_task(page: Page, task_name: str):
     task_box = await utils.match_ocr_txt(ocr_output, [task_name])
     if task_box:
         box = task_box.box
-        res = utils.get_ocr_box_in_range_x(
-            ocr_output, (box[0][0], box[1][0]))
+        res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
         return await utils.ocr_click_txts(page, res, ["前往"])

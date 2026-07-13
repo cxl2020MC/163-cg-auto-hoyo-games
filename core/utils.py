@@ -14,13 +14,17 @@ async def screen_shot_and_ocr(page: Page) -> types.OCR_Results:
     return ocr_output
 
 
-async def get_ocr(page: Page, ocr_output: types.OCR_Results | None = None) -> types.OCR_Results:
+async def get_ocr(
+    page: Page, ocr_output: types.OCR_Results | None = None
+) -> types.OCR_Results:
     if ocr_output is None:
         ocr_output = await screen_shot_and_ocr(page)
     return ocr_output
 
 
-async def match_ocr_txts(ocr_output: types.OCR_Results, match_txts: list[str],  exact: bool | None = None):
+async def match_ocr_txts(
+    ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None
+):
     txt_positions: list[types.OCR_Result] = []
     for ocr in ocr_output:
         txt, box = ocr.txt, ocr.box
@@ -37,14 +41,21 @@ async def match_ocr_txts(ocr_output: types.OCR_Results, match_txts: list[str],  
     return txt_positions
 
 
-async def match_ocr_txt(ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None) -> types.OCR_Result | None:
+async def match_ocr_txt(
+    ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None
+) -> types.OCR_Result | None:
     text_positions = await match_ocr_txts(ocr_output, match_txts, exact)
     if len(text_positions) > 0:
         log.debug(f"匹配文本 {match_txts} 到 {len(text_positions)} 个位置，返回第一个")
         return text_positions[0]
 
 
-async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None):
+async def ocr_click_txts(
+    page: Page,
+    ocr_output: types.OCR_Results,
+    match_txts: list[str],
+    exact: bool | None = None,
+):
     result = await match_ocr_txt(ocr_output, match_txts, exact)
     if result is not None:
         x, y = get_box_center(result.box)
@@ -52,14 +63,27 @@ async def ocr_click_txts(page: Page, ocr_output: types.OCR_Results, match_txts: 
     return result
 
 
-async def ocr_clicks_txts(page: Page, ocr_output: types.OCR_Results, match_txts: list[str], exact: bool | None = None):
+async def ocr_clicks_txts(
+    page: Page,
+    ocr_output: types.OCR_Results,
+    match_txts: list[str],
+    exact: bool | None = None,
+):
     results = await match_ocr_txts(ocr_output, match_txts, exact)
     for result in results:
         x, y = get_box_center(result.box)
         await browser.click_video(page, x, y)
     return results
 
-async def wait_txts_appear(page: Page, match_txts: list[str], exact: bool | None = None, retry_count_type: retry.RetryCountType = retry.RetryCountType.TIME, retry_count: int = 30, retry_interval: float = 1):
+
+async def wait_txts_appear(
+    page: Page,
+    match_txts: list[str],
+    exact: bool | None = None,
+    retry_count_type: retry.RetryCountType = retry.RetryCountType.TIME,
+    retry_count: int = 30,
+    retry_interval: float = 1,
+):
     @retry.retry(retry_count_type=retry_count_type, retry_count=retry_count)
     async def wait_once():
         ocr_output = await get_ocr(page)
@@ -68,10 +92,18 @@ async def wait_txts_appear(page: Page, match_txts: list[str], exact: bool | None
             return result
         log.info(f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试")
         await sleep(page, retry_interval)
+
     return await wait_once()
 
 
-async def ocr_click_txts_retry_old(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None, retry_nums: int = 3, retry_interval: float = 1):
+async def ocr_click_txts_retry_old(
+    page: Page,
+    match_txts: list[str],
+    ocr_output: types.OCR_Results | None = None,
+    exact: bool | None = None,
+    retry_nums: int = 3,
+    retry_interval: float = 1,
+):
     for i in range(retry_nums):
         ocr_output = await get_ocr(page, ocr_output)
         result = await ocr_click_txts(page, ocr_output, match_txts, exact)
@@ -79,16 +111,22 @@ async def ocr_click_txts_retry_old(page: Page, match_txts: list[str], ocr_output
             return result
         ocr_output = None
         log.info(
-            f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_nums})")
+            f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试 ({i + 1}/{retry_nums})"
+        )
         await sleep(page, retry_interval)
     log.warning(f"尝试了 {retry_nums} 次，仍未找到文本 {match_txts}")
     return None
 
 
-async def ocr_click_txts_retry(page: Page, match_txts: list[str], ocr_output: types.OCR_Results | None = None, exact: bool | None = None,
-                               retry_type: retry.RetryCountType = retry.RetryCountType.TIME,
-                               retry_count: int = 30,
-                               retry_interval: float = 1):
+async def ocr_click_txts_retry(
+    page: Page,
+    match_txts: list[str],
+    ocr_output: types.OCR_Results | None = None,
+    exact: bool | None = None,
+    retry_type: retry.RetryCountType = retry.RetryCountType.TIME,
+    retry_count: int = 30,
+    retry_interval: float = 1,
+):
     @retry.retry(retry_count_type=retry_type, retry_count=retry_count)
     async def click_once():
         nonlocal ocr_output
@@ -99,6 +137,7 @@ async def ocr_click_txts_retry(page: Page, match_txts: list[str], ocr_output: ty
         ocr_output = None
         log.info(f"未找到文本 {match_txts}，等待 {retry_interval} 秒后重试")
         await sleep(page, retry_interval)
+
     return await click_once()
 
 
@@ -124,7 +163,9 @@ async def match_screenshot_cv_template(template_path: str, threshold: float = 0.
     return None
 
 
-def get_ocr_box_in_range_x(ocr_output: types.OCR_Results, range_x: tuple[float, float]) -> types.OCR_Results:
+def get_ocr_box_in_range_x(
+    ocr_output: types.OCR_Results, range_x: tuple[float, float]
+) -> types.OCR_Results:
     func_result: list[types.OCR_Result] = []
     for ocr in ocr_output:
         txt, box = ocr.txt, ocr.box
@@ -147,23 +188,34 @@ async def click_cv_template(page: Page, template_path: str, threshold: float = 0
         return (x, y)
 
 
-async def click_cv_template_retry_old(page: Page, template_path: str, threshold: float = 0.75,
-                                  retry_times: int = 5, retry_interval: int = 1):
+async def click_cv_template_retry_old(
+    page: Page,
+    template_path: str,
+    threshold: float = 0.75,
+    retry_times: int = 5,
+    retry_interval: int = 1,
+):
     for i in range(retry_times):
         await browser.screen_shot(page)
         click_cv_result = await click_cv_template(page, template_path, threshold)
         if click_cv_result:
             return click_cv_result
         log.info(
-            f"未找到模板 {template_path}，等待 {retry_interval} 秒后重试 ({i+1}/{retry_times})")
+            f"未找到模板 {template_path}，等待 {retry_interval} 秒后重试 ({i + 1}/{retry_times})"
+        )
         await sleep(page, retry_interval)
     log.warning(f"尝试了 {retry_times} 次，仍未找到模板 {template_path}")
     return None
 
 
-async def click_cv_template_retry(page: Page, template_path: str, threshold: float = 0.75,
-                                     retry_count_type: retry.RetryCountType = retry.RetryCountType.TIME,
-                                     retry_count: int = 15, retry_interval: int = 1):
+async def click_cv_template_retry(
+    page: Page,
+    template_path: str,
+    threshold: float = 0.75,
+    retry_count_type: retry.RetryCountType = retry.RetryCountType.TIME,
+    retry_count: int = 15,
+    retry_interval: int = 1,
+):
     @retry.retry(retry_count_type=retry_count_type, retry_count=retry_count)
     async def click_once():
         await browser.screen_shot(page)
@@ -172,10 +224,13 @@ async def click_cv_template_retry(page: Page, template_path: str, threshold: flo
             return click_cv_result
         log.info(f"未找到模板 {template_path}，等待 {retry_interval} 秒后重试")
         await sleep(page, retry_interval)
+
     return await click_once()
 
 
-async def drag(page: Page, start: tuple[float, float], end: tuple[float, float], steps: int = 20):
+async def drag(
+    page: Page, start: tuple[float, float], end: tuple[float, float], steps: int = 20
+):
     log.info(f"从 {start} 拖动到 {end}")
     # video_dom = page.locator("video")
     await page.mouse.move(start[0], start[1])

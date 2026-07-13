@@ -14,6 +14,7 @@ async def test(page: Page, account: config._GameAccount):
         ocr_output = await ocr.ocr_image()
         await utils.sleep(page, 1)
 
+
 async def main():
     accounts = config.config.game_accounts
 
@@ -21,7 +22,8 @@ async def main():
         log.info(f"处理账号id为 {account.id} 的账号")
         await core_main.playwright_run(account.id, account, test)
 
+
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())
 
+    asyncio.run(main())

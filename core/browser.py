@@ -3,8 +3,10 @@ from playwright.async_api import Page
 from . import config
 from .log import logger as log
 
+
 def get_video_element(page: Page):
     return page.locator("video")
+
 
 async def click_video(page: Page, x: float, y: float):
     log.info(f"点击位置 ({x}, {y})")
@@ -15,5 +17,3 @@ async def screen_shot(page: Page):
     log.info("截图")
     video_dom = get_video_element(page)
     return await video_dom.screenshot(path=config.SCREENSHOT_PATH)
-
-

@@ -32,10 +32,10 @@ class _GameAccount(BaseModel):
 
 
 class _Config(BaseModel):
-    image_change_dir: str = './img'
-    data_dir: str = './data'
-    push_token: str = ''
-    push_url: str = ''
+    image_change_dir: str = "./img"
+    data_dir: str = "./data"
+    push_token: str = ""
+    push_url: str = ""
     game_accounts: list[_GameAccount]
 
 
@@ -43,7 +43,7 @@ class _Config(BaseModel):
 #     config = _Config.model_validate_json(f.read())
 #     log.debug(config)
 
-with open("./data/config.toml", 'rb') as f:
+with open("./data/config.toml", "rb") as f:
     # config = _Config.model_validate_json(f.read())
     config = _Config.model_validate(tomllib.load(f))
     log.debug(config)
