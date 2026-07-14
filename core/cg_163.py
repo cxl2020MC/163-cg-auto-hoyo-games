@@ -136,7 +136,8 @@ async def check_cg_game_home_activity_v2(page: Page):
     log.debug("检查云游戏主页活动")
     # <button data-v-437e421d="" class="slide-close"></button>
     # div.slide
-    locator = page.locator("div.slide")
+    # #app > div.slide.confirm-shade.popup.landscape
+    locator = page.locator("div.slide.confirm-shade")
     try:
         await expect(locator).to_be_visible()
         home_activity_status = True
@@ -146,7 +147,7 @@ async def check_cg_game_home_activity_v2(page: Page):
     log.info(f"云游戏主页活动页面: {home_activity_status}")
     if home_activity_status:
         log.info("发现云游戏主页活动，尝试关闭")
-        await page.evaluate('() => document.querySelector("div.slide").remove()')
+        await page.evaluate('() => document.querySelector("div.slide.confirm-shade").remove()')
 
     return home_activity_status
 
