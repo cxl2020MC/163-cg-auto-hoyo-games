@@ -63,8 +63,8 @@ async def is_in_street(ocr_result: types.OCR_Results):
 
 @retry.retry(retry_count=120, raise_exception_error=Exception("传送加载超时"))
 async def wait_for_teleport(page: Page):
-    ocr_output = await utils.get_ocr(page)
-    if await is_in_street(ocr_output):
+    ocr_outputs = await utils.get_ocr(page)
+    if await is_in_street(ocr_outputs):
         log.info("已到达目的地")
         return True
 
@@ -75,12 +75,12 @@ async def agree_teleport(page: Page):
 
 # 点击弹窗确认按钮
 @retry.retry(raise_exception_error=Exception("没有找到确认按钮"))
-async def click_confirm(page: Page, ocr_output: types.OCR_Results | None = None):
-    ocr_output = await utils.get_ocr(page, ocr_output)
-    if await utils.ocr_click_txts(page, ocr_output, ["确认", "确定"], exact=True):
+async def click_confirm(page: Page, ocr_outputs: types.OCR_Results | None = None):
+    ocr_outputs = await utils.get_ocr(page, ocr_outputs)
+    if await utils.ocr_click_txts(page, ocr_outputs, ["确认", "确定"], exact=True):
         return True
-    # 重置ocr_output
-    ocr_output = None
+    # 重置ocr_outputs
+    ocr_outputs = None
     await utils.sleep(page, 1)
 
 

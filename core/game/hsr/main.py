@@ -14,9 +14,9 @@ async def main(page: Page, account: config._GameAccount):
 
 async def goto_game_home(page: Page, account: config._GameAccount):
     for _ in range(200):
-        ocr_output = await utils.get_ocr(page)
-        await utils.ocr_click_txts(page, ocr_output, ["开始游戏", "点击进入"])
-        if await utils.match_ocr_txt(ocr_output, ["列车补给"]):
+        ocr_outputs = await utils.get_ocr(page)
+        await utils.ocr_click_txts(page, ocr_outputs, ["开始游戏", "点击进入"])
+        if await utils.match_ocr_txt(ocr_outputs, ["列车补给"]):
             log.info("领取月卡奖励")
             await utils.ocr_click_txts_retry(page, ["点击领取"])
             await push.screen_shot_and_push(page, account, "月卡奖励")
@@ -34,8 +34,8 @@ async def goto_game_home(page: Page, account: config._GameAccount):
 
 async def open_phone(page: Page):
     for _ in range(15):
-        ocr_output = await utils.get_ocr(page)
-        if await utils.match_ocr_txt(ocr_output, ["旅情事记"]):
+        ocr_outputs = await utils.get_ocr(page)
+        if await utils.match_ocr_txt(ocr_outputs, ["旅情事记"]):
             log.info("当前正在手机界面")
             return True
         else:
@@ -82,9 +82,9 @@ async def quick_book_daily_task(page: Page, account: config._GameAccount):
 async def daily_entrust(page: Page, account: config._GameAccount):
     await open_entrust(page)
     for i in range(5):
-        ocr_output = await utils.get_ocr(page)
+        ocr_outputs = await utils.get_ocr(page)
         log.debug(f"第{i + 1}次检查领取奖励")
-        if await utils.ocr_click_txts(page, ocr_output, ["领取奖励"], exact=True):
+        if await utils.ocr_click_txts(page, ocr_outputs, ["领取奖励"], exact=True):
             await utils.sleep(page, 2)
             await push.screen_shot_and_push(page, account, "今日委托")
             await confirm_to_receive_reward(page)
@@ -126,13 +126,13 @@ async def auto_attack(page: Page, account: config._GameAccount):
     await utils.ocr_click_txts_retry(page, ["开始挑战"], exact=True)
     await utils.sleep(page, 2)
     for i in range(300):
-        ocr_output = await utils.get_ocr(page)
-        if await utils.match_ocr_txt(ocr_output, ["单攻", "群攻"]):
+        ocr_outputs = await utils.get_ocr(page)
+        if await utils.match_ocr_txt(ocr_outputs, ["单攻", "群攻"]):
             log.info("自动战斗可能未开启，尝试开启自动战斗")
             await utils.click_cv_template_retry(
                 page, "./core/template/hsr/open_auto_attack.png"
             )
-        if await utils.match_ocr_txt(ocr_output, ["挑战失败", "挑战成功"]):
+        if await utils.match_ocr_txt(ocr_outputs, ["挑战失败", "挑战成功"]):
             log.info("挑战已结束")
             await push.screen_shot_and_push(page, account, "挑战结果")
             await utils.ocr_click_txts_retry(page, ["退出关卡"])
@@ -145,9 +145,9 @@ async def auto_attack(page: Page, account: config._GameAccount):
 async def reward_mrwt(page: Page, account: config._GameAccount):
     # await open_quick_book(page)
     for i in range(6):
-        ocr_output = await utils.get_ocr(page)
+        ocr_outputs = await utils.get_ocr(page)
         log.debug(f"第 {i + 1} 次检查领取每日奖励")
-        if await utils.ocr_click_txts(page, ocr_output, ["领取"], exact=True):
+        if await utils.ocr_click_txts(page, ocr_outputs, ["领取"], exact=True):
             log.info("找到每日委托奖励")
             break
         await utils.sleep(page, 1)
@@ -159,9 +159,9 @@ async def reward_mrwt(page: Page, account: config._GameAccount):
 async def reward_daily_task(page: Page, account: config._GameAccount):
     await open_quick_book(page)
     for i in range(4):
-        ocr_output = await utils.get_ocr(page)
+        ocr_outputs = await utils.get_ocr(page)
         log.debug(f"第 {i + 1} 次检查领取每日奖励")
-        if await utils.ocr_click_txts(page, ocr_output, ["领取"], exact=True):
+        if await utils.ocr_click_txts(page, ocr_outputs, ["领取"], exact=True):
             log.info("找到每日委托奖励")
             await utils.sleep(page, 0.5)
     await utils.sleep(page, 1)
@@ -174,9 +174,9 @@ async def reward_daily_task(page: Page, account: config._GameAccount):
 
 
 async def switch_quick_book_task(page: Page, task_name: str):
-    ocr_output = await utils.get_ocr(page)
-    task_box = await utils.match_ocr_txt(ocr_output, [task_name])
+    ocr_outputs = await utils.get_ocr(page)
+    task_box = await utils.match_ocr_txt(ocr_outputs, [task_name])
     if task_box:
         box = task_box.box
-        res = utils.get_ocr_box_in_range_x(ocr_output, (box[0][0], box[1][0]))
+        res = utils.get_ocr_box_in_range_x(ocr_outputs, (box[0][0], box[1][0]))
         return await utils.ocr_click_txts(page, res, ["前往"])

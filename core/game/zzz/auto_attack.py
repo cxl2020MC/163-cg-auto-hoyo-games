@@ -1,4 +1,4 @@
-import asyncio
+# import asyncio
 
 from playwright.async_api import Page
 
@@ -58,8 +58,8 @@ class Auto_Attack:
                 await self.click_attack()
 
     async def check_battle_end(self):
-        ocr_output = await utils.get_ocr(self.page)
-        if await utils.match_ocr_txt(ocr_output, ["结果"]):
+        ocr_outputs = await utils.get_ocr(self.page)
+        if await utils.match_ocr_txt(ocr_outputs, ["结果"]):
             log.info("战斗已结束")
             self.attack_status = Attack_Status.End
             return True

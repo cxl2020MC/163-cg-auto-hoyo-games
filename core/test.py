@@ -11,7 +11,7 @@ async def test(page: Page, account: config._GameAccount):
     # await zzz_main.goto_game_home(page, account)
     while True:
         await browser.screen_shot(page)
-        ocr_output = await ocr.ocr_image()
+        ocr_outputs = await ocr.ocr_image()
         await utils.sleep(page, 1)
 
 
