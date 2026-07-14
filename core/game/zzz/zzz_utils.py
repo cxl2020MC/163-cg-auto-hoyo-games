@@ -32,7 +32,7 @@ async def check_game_status(page: Page, ocr_result: types.OCR_Results):
 
 
 # 返回街区
-async def return_to_streets(page: Page, ocr_result: types.OCR_Results | None = None):
+async def return_to_streets_old(page: Page, ocr_result: types.OCR_Results | None = None):
     cv_reslt = await utils.match_screenshot_cv_template("./core/template/tc.png", 0.65)
     if cv_reslt:
         cv_box_center = utils.get_cv_box_center(cv_reslt)
@@ -40,6 +40,13 @@ async def return_to_streets(page: Page, ocr_result: types.OCR_Results | None = N
         x, y = cv_box_center
         await browser.click_video(page, x, y)
     else:
+        ocr_result = await utils.get_ocr(page, ocr_result)
+        await utils.ocr_click_txts(page, ocr_result, ["X", "x"])
+
+# 返回街区
+async def return_to_streets(page: Page, ocr_result: types.OCR_Results | None = None):
+    cv_reslt = await utils.click_cv_template(page, "./core/template/tc.png", threshold=0.65)
+    if not cv_reslt:
         ocr_result = await utils.get_ocr(page, ocr_result)
         await utils.ocr_click_txts(page, ocr_result, ["X", "x"])
 
