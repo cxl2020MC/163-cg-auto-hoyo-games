@@ -73,7 +73,7 @@ async def is_in_street(ocr_result: types.OCR_Results):
         return True
 
 
-@retry.retry(retry_count=120, raise_exception_error=Exception("传送加载超时"))
+@retry.retry(retry_count=180, raise_exception_error=Exception("传送加载超时"))
 async def wait_for_teleport(page: Page):
     ocr_outputs = await utils.get_ocr(page)
     if await is_in_street(ocr_outputs):

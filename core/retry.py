@@ -19,14 +19,23 @@ def retry(
 ):
     def decorator(func):
         async def wrapper(*args, **kwargs):
-            start_time = time.time()
-            while time.time() - start_time < retry_count:
-                result = await func(*args, **kwargs)
-                if check_result(result):
-                    return result
-                log.info(
-                    f"函数 {func.__name__} 返回值 {result} 不符合规则，重试 ({int(time.time() - start_time)}/{retry_count}{'s' if retry_count_type == RetryCountType.TIME else ''})"
-                )
+            if retry_count_type == RetryCountType.TIME:
+                start_time = time.time()
+                while (time.time() - start_time) < retry_count:
+                    result = await func(*args, **kwargs)
+                    if check_result(result):
+                        return result
+                    log.info(
+                        f"函数 {func.__name__} 返回值 {result} 不符合规则，重试 ({int(time.time() - start_time)}/{retry_count}s)"
+                    )
+            else:
+                for i in range(retry_count + 1):
+                    result = await func(*args, **kwargs)
+                    if check_result(result):
+                        return result
+                    log.info(
+                        f"函数 {func.__name__} 返回值 {result} 不符合规则，重试 ({i}/{retry_count})"
+                    )
             error_msg = f"函数 {func.__name__} 在重试类型为 {retry_count_type} 的 {retry_count} 次重试内未能成功执行"
             log.error(error_msg)
             if raise_exception:
