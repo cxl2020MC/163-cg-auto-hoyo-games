@@ -46,7 +46,7 @@ async def goto_game_home(page: Page, account: config._GameAccount):
 
         await zzz_utils.return_to_streets(page, ocr_outputs)
         await utils.sleep(page, 1)
-    
+
     log.error("尝试了 300 次，仍未到达街区")
     raise Exception("找不到街区")
 
