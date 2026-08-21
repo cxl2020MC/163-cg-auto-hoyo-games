@@ -43,9 +43,4 @@ async def ocr_image(image_path: str = str(_image_path)) -> types.OCR_Results:
 def to_ocr_result(result: RapidOCROutput) -> types.OCR_Results | None:
     if not result.txts or result.boxes is None or not result.scores:
         return None
-    return list(
-        map(
-            lambda x: types.OCR_Result(*x),
-            zip(result.txts, result.boxes, result.scores),
-        )
-    )
+    return [types.OCR_Result(*x) for x in zip(result.txts, result.boxes, result.scores)]
