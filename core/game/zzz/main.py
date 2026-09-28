@@ -31,7 +31,7 @@ async def goto_game_home(page: Page, account: config._GameAccount):
             log.warning("网络请求错误，尝试点击重试")
             await utils.ocr_click_txts(page, ocr_outputs, ["重试"], exact=True)
         elif await utils.ocr_click_txts(
-            page, ocr_outputs, ["用户协议和隐私政策"], exact=True
+            page, ocr_outputs, ["用户协议和隐私政策"]
         ):
             log.info("尝试同意用户协议和隐私政策")
             for _ in range(3):
@@ -39,7 +39,7 @@ async def goto_game_home(page: Page, account: config._GameAccount):
                     page, "./core/template/agree_yhxy.png"
                 )
                 await utils.sleep(page, 1)
-            await utils.ocr_click_txts_retry(page, ["接受"], exact=True)
+                await utils.ocr_click_txts_retry(page, ["接受"], exact=True)
         if await zzz_utils.is_in_street(ocr_outputs):
             log.info("已到达街区")
             return True
