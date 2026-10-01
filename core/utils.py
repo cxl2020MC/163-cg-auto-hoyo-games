@@ -9,8 +9,8 @@ async def sleep(page: Page, seconds: float):
 
 
 async def screen_shot_and_ocr(page: Page) -> types.OCR_Results:
-    await browser.screen_shot(page)
-    ocr_outputs = await ocr.ocr_image()
+    image = await browser.screen_shot(page)
+    ocr_outputs = await ocr.ocr_image(image)
     return ocr_outputs
 
 
